@@ -33,4 +33,26 @@ class ParticipantsController < ApplicationController
                                        .includes(:speakers)
                                        .order(created_at: :desc)
   end
+
+  def link_company
+    unless current_user&.admin?
+      redirect_to items_path, alert: "Not authorized"
+      return
+    end
+
+    @participant = Participant.find(params[:id])
+
+    if params[:company_id] == "new" && params[:new_company_name].present?
+      # Create new company
+      company = Company.create!(name: params[:new_company_name])
+      @participant.update(company_id: company.id, company_name: company.name)
+      redirect_to who_path(name: @participant.slug), notice: "Created and linked to #{company.name}"
+    elsif params[:company_id].present?
+      company = Company.find(params[:company_id])
+      @participant.update(company_id: company.id)
+      redirect_to who_path(name: @participant.slug), notice: "Linked to #{company.name}"
+    else
+      redirect_to who_path(name: @participant.slug), alert: "No company selected"
+    end
+  end
 end

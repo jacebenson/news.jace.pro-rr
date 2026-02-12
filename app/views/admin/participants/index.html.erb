@@ -10,14 +10,22 @@
 
 <div class="mb-4 flex flex-wrap gap-4">
   <%= form_with url: admin_participants_path, method: :get, class: "flex gap-2", local: true do %>
-    <%= text_field_tag :search, @search, placeholder: "Search by name or title...",
+    <%= text_field_tag :search, @search, placeholder: "Search by name, title, or company...",
         class: "rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm w-64" %>
     <%= submit_tag "Search", class: "bg-gray-600 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700" %>
+    <% if @search.present? %>
+      <%= link_to "Clear", admin_participants_path(filter: params[:filter]), class: "px-3 py-2 text-sm text-gray-600 hover:text-gray-900" %>
+    <% end %>
   <% end %>
   
   <div class="flex gap-2">
     <%= link_to "All", admin_participants_path, class: "px-3 py-2 rounded text-sm #{params[:filter].nil? ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
-    <%= link_to "Unlinked", admin_participants_path(filter: "unlinked"), class: "px-3 py-2 rounded text-sm #{params[:filter] == 'unlinked' ? 'bg-yellow-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <%= link_to admin_participants_path(filter: "unlinked"), class: "px-3 py-2 rounded text-sm inline-flex items-center gap-1 #{params[:filter] == 'unlinked' ? 'bg-yellow-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" do %>
+      Unlinked
+      <% if @unlinked_count > 0 %>
+        <span class="<%= params[:filter] == 'unlinked' ? 'bg-yellow-700' : 'bg-yellow-600 text-white' %> text-xs px-1.5 py-0.5 rounded-full"><%= @unlinked_count %></span>
+      <% end %>
+    <% end %>
   </div>
 </div>
 
@@ -40,15 +48,29 @@
                 <img src="<%= participant.image_url %>" class="h-8 w-8 rounded-full object-cover">
               <% else %>
                 <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-500">
-                  <%= participant.name.first %>
+                  <%= participant.name&.first || "?" %>
                 </div>
               <% end %>
               <span class="text-sm font-medium text-gray-900"><%= participant.name %></span>
             </div>
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= participant.title %></td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= participant.company_name %></td>
-          <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= truncate(participant.title, length: 40) %></td>
+          <td class="px-6 py-4 text-sm">
+            <% if participant.company.present? %>
+              <%= link_to participant.company.name, admin_company_path(participant.company), class: "text-blue-600 hover:text-blue-900" %>
+            <% elsif participant.company_name.present? %>
+              <%= link_to who_path(name: participant.slug), class: "text-yellow-600 hover:text-yellow-800", title: "Link company on profile page" do %>
+                <%= participant.company_name %>
+                <svg class="inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              <% end %>
+            <% else %>
+              <span class="text-gray-400">—</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+            <%= link_to "View", admin_participant_path(participant), class: "text-gray-600 hover:text-gray-900" %>
             <%= link_to "Edit", edit_admin_participant_path(participant), class: "text-blue-600 hover:text-blue-900" %>
           </td>
         </tr>

@@ -39,6 +39,12 @@ Rails.application.routes.draw do
 
   # Participant profile
   get "who/:name", to: "participants#show", as: :who
+  post "participants/:id/link-company", to: "participants#link_company", as: :participant_link_company
+
+  # API endpoints
+  namespace :api do
+    get "companies/search", to: "companies#search"
+  end
 
   # Knowledge Sessions - all events
   %w[k20 k21 k22 k23 k24 k25 k26 nulledge25].each do |event|
@@ -60,7 +66,11 @@ Rails.application.routes.draw do
     post "dashboard/trigger-s3-migration", to: "dashboard#trigger_s3_migration", as: :trigger_s3_migration
     resources :users
     resources :companies
-    resources :participants
+    resources :participants do
+      member do
+        post :link_company
+      end
+    end
     resources :news_feeds
     resources :news_items
     resources :knowledge_sessions

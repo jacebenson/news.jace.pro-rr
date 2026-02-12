@@ -20,9 +20,61 @@
       <%= f.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
     </div>
 
-    <div>
-      <%= f.label :company_name, class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_field :company_name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    <%# Company linking section %>
+    <div class="border rounded-lg p-4 <%= participant.company_id.nil? && participant.company_name.present? ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200' %>">
+      <div class="flex items-center justify-between mb-3">
+        <label class="block text-sm font-medium text-gray-700">Company</label>
+        <% if participant.company_id.nil? && participant.company_name.present? %>
+          <span class="text-xs text-yellow-600 font-medium">⚠ Not linked</span>
+        <% elsif participant.company_id.present? %>
+          <span class="text-xs text-green-600 font-medium">✓ Linked</span>
+        <% end %>
+      </div>
+
+      <div class="space-y-3">
+        <%# Company name (text) %>
+        <div>
+          <%= f.label :company_name, "Company Name (text)", class: "block text-xs font-medium text-gray-500" %>
+          <%= f.text_field :company_name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm", placeholder: "e.g. Acme Corp" %>
+          <p class="mt-1 text-xs text-gray-400">Display name - shown on profiles</p>
+        </div>
+
+        <%# Link to existing company with typeahead %>
+        <div>
+          <label class="block text-xs font-medium text-gray-500">Link to Company Record</label>
+          <div class="relative mt-1">
+            <input type="text" 
+                   id="company-search" 
+                   placeholder="Search companies..." 
+                   value="<%= participant.company&.name %>"
+                   autocomplete="off"
+                   class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+            <%= f.hidden_field :company_id, id: "company-id-input" %>
+            <div id="company-results" class="hidden absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"></div>
+          </div>
+          <p class="mt-1 text-xs text-gray-400">Type to search, then select a company</p>
+          <% if participant.company_id.present? %>
+            <p class="mt-1 text-xs">
+              Currently linked to: <%= link_to participant.company.name, admin_company_path(participant.company), class: "text-blue-600 hover:underline" %>
+              <button type="button" onclick="document.getElementById('company-id-input').value=''; document.getElementById('company-search').value=''; this.parentElement.remove();" class="ml-2 text-red-600 hover:underline">Remove link</button>
+            </p>
+          <% end %>
+        </div>
+
+        <%# Quick create company option %>
+        <% if participant.company_name.present? && participant.company_id.nil? %>
+          <div class="pt-2 border-t border-yellow-200">
+            <p class="text-xs text-gray-600 mb-2">Can't find the company?</p>
+            <%= link_to new_admin_company_path(name: participant.company_name, return_to: request.path), 
+                class: "inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800" do %>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Create "<%= participant.company_name %>" as a new company
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
 
     <div>
@@ -46,3 +98,59 @@
     </div>
   </div>
 <% end %>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('company-search');
+  const resultsDiv = document.getElementById('company-results');
+  const companyIdInput = document.getElementById('company-id-input');
+  let debounceTimer;
+  
+  searchInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    companyIdInput.value = ''; // Clear selection when typing
+    
+    clearTimeout(debounceTimer);
+    if (query.length < 2) {
+      resultsDiv.classList.add('hidden');
+      return;
+    }
+    
+    debounceTimer = setTimeout(() => {
+      fetch(`/api/companies/search?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(companies => {
+          if (companies.length === 0) {
+            resultsDiv.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No matches found</div>';
+          } else {
+            resultsDiv.innerHTML = companies.map(c => 
+              `<div class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer" data-id="${c.id}" data-name="${c.name}">${c.name}</div>`
+            ).join('');
+          }
+          resultsDiv.classList.remove('hidden');
+        });
+    }, 200);
+  });
+  
+  resultsDiv.addEventListener('click', function(e) {
+    const item = e.target.closest('[data-id]');
+    if (item) {
+      searchInput.value = item.dataset.name;
+      companyIdInput.value = item.dataset.id;
+      resultsDiv.classList.add('hidden');
+    }
+  });
+  
+  document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+      resultsDiv.classList.add('hidden');
+    }
+  });
+  
+  searchInput.addEventListener('focus', function() {
+    if (resultsDiv.innerHTML && this.value.length >= 2) {
+      resultsDiv.classList.remove('hidden');
+    }
+  });
+})();
+</script>
