@@ -3,13 +3,13 @@ class MigrateImagesToS3Job < ApplicationJob
 
   BATCH_SIZE = 100
 
-  def perform(offset = 0)
+  def perform
     unless S3Service.enabled?
       Rails.logger.info "[MIGRATE_IMAGES] S3 not enabled, skipping"
       return
     end
 
-    Rails.logger.info "[MIGRATE_IMAGES] Starting at offset #{offset}"
+    Rails.logger.info "[MIGRATE_IMAGES] Starting batch"
     job_start = Time.current
 
     # Find items with external image URLs (not already on S3, not blank, not local)
@@ -18,12 +18,10 @@ class MigrateImagesToS3Job < ApplicationJob
       .where.not(image_url: [ nil, "" ])
       .where.not("image_url LIKE ?", "https://#{s3_host}%")
       .where.not("image_url LIKE ?", "/%")  # Skip local paths
-      .order(:id)
-      .offset(offset)
       .limit(BATCH_SIZE)
 
     if items.none?
-      Rails.logger.info "[MIGRATE_IMAGES] No more items to migrate"
+      Rails.logger.info "[MIGRATE_IMAGES] No more items to migrate - done!"
       return
     end
 
@@ -38,19 +36,23 @@ class MigrateImagesToS3Job < ApplicationJob
         if s3_url
           item.update_column(:image_url, s3_url)
           processed += 1
-          Rails.logger.debug "[MIGRATE_IMAGES] Uploaded #{item.id}: #{s3_url}"
+        else
+          # Mark as failed so we don't retry forever - prefix with /failed/
+          item.update_column(:image_url, "/failed/#{item.image_url}")
+          errors += 1
         end
       rescue StandardError => e
         errors += 1
         Rails.logger.warn "[MIGRATE_IMAGES] Error for #{item.id}: #{e.message}"
+        # Mark as failed
+        item.update_column(:image_url, "/failed/#{item.image_url}") rescue nil
       end
     end
 
     elapsed = (Time.current - job_start).round(1)
-    Rails.logger.info "[MIGRATE_IMAGES] Batch done: #{processed}/#{items.count} uploaded in #{elapsed}s (#{errors} errors)"
+    Rails.logger.info "[MIGRATE_IMAGES] Batch done: #{processed} uploaded, #{errors} failed in #{elapsed}s"
 
-    # Schedule next batch
-    next_offset = offset + BATCH_SIZE
+    # Check remaining and schedule next batch
     remaining = NewsItem
       .where.not(image_url: [ nil, "" ])
       .where.not("image_url LIKE ?", "https://#{s3_host}%")
@@ -59,7 +61,7 @@ class MigrateImagesToS3Job < ApplicationJob
 
     if remaining > 0
       Rails.logger.info "[MIGRATE_IMAGES] #{remaining} items remaining, scheduling next batch"
-      MigrateImagesToS3Job.set(wait: 5.seconds).perform_later(next_offset)
+      MigrateImagesToS3Job.set(wait: 2.seconds).perform_later
     else
       Rails.logger.info "[MIGRATE_IMAGES] All images migrated!"
     end
