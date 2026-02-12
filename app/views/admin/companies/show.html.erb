@@ -150,11 +150,11 @@
         </div>
         <div class="flex justify-between">
           <dt class="text-gray-500">Created</dt>
-          <dd class="text-gray-700"><%= @company.created_at.strftime("%b %d, %Y") %></dd>
+          <dd class="text-gray-700"><%= ms_to_time(@company.created_at)&.strftime("%b %d, %Y") || "N/A" %></dd>
         </div>
         <div class="flex justify-between">
           <dt class="text-gray-500">Updated</dt>
-          <dd class="text-gray-700"><%= @company.updated_at.strftime("%b %d, %Y") %></dd>
+          <dd class="text-gray-700"><%= ms_to_time(@company.updated_at)&.strftime("%b %d, %Y") || "N/A" %></dd>
         </div>
       </dl>
     </div>
