@@ -13,8 +13,8 @@ module Admin
       # Feed stats
       @active_feeds = NewsFeed.active.count
       @feeds_with_errors = NewsFeed.where.not(last_error: nil).count
-      @recently_fetched = NewsFeed.where("last_fetched_at > ?", 30.minutes.ago).count
-      @never_fetched = NewsFeed.where(last_fetched_at: nil).count
+      @recently_fetched = NewsFeed.where("last_successful_fetch > ?", 30.minutes.ago).count
+      @never_fetched = NewsFeed.where(last_successful_fetch: nil).count
 
       # Partner stats
       @total_partners = Company.partners.count
