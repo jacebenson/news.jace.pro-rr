@@ -1,0 +1,120 @@
+<% content_for :title, "Background Jobs - Admin" %>
+
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Background Jobs</h1>
+
+<%# Job Triggers %>
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+  <h2 class="font-semibold text-gray-900 mb-4">Run Jobs Manually</h2>
+  <div class="flex flex-wrap gap-4">
+    <%= button_to "Fetch News Items", admin_run_job_path(job: "fetch_news_items"), 
+        method: :post, 
+        class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+        data: { turbo_confirm: "Run FetchNewsItemsJob now?" } %>
+    
+    <%= button_to "Fetch Store Apps", admin_run_job_path(job: "fetch_apps"), 
+        method: :post, 
+        class: "bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700",
+        data: { turbo_confirm: "Run FetchAppsJob now? This takes ~1 hour." } %>
+    
+    <%= button_to "Enrich Items", admin_run_job_path(job: "enrich_items"), 
+        method: :post, 
+        class: "bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700",
+        data: { turbo_confirm: "Run EnrichItemJob now?" } %>
+  </div>
+</div>
+
+<%# Stats %>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Pending Jobs</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= @pending_jobs %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Scheduled Jobs</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= @scheduled_jobs %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Failed Jobs</h3>
+    <p class="text-2xl font-bold <%= @failed_jobs > 0 ? 'text-red-600' : 'text-gray-900' %>"><%= @failed_jobs %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Items Pending Enrichment</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= @items_pending_enrichment %></p>
+  </div>
+</div>
+
+<%# Feed Status %>
+<div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+  <div class="px-4 py-3 border-b">
+    <h2 class="font-semibold text-gray-900">Feed Status</h2>
+  </div>
+  <div class="p-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div>
+        <span class="text-gray-500">Active Feeds:</span>
+        <span class="font-medium"><%= @active_feeds %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Feeds with Errors:</span>
+        <span class="font-medium <%= @feeds_with_errors > 0 ? 'text-red-600' : '' %>"><%= @feeds_with_errors %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Recently Fetched (30min):</span>
+        <span class="font-medium"><%= @recently_fetched %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Never Fetched:</span>
+        <span class="font-medium"><%= @never_fetched %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Recent Jobs %>
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <div class="px-4 py-3 border-b">
+    <h2 class="font-semibold text-gray-900">Recent Jobs</h2>
+  </div>
+  <% if @recent_jobs.any? %>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Queue</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Scheduled</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @recent_jobs.each do |job| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= job.class_name %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= job.queue_name %></td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <% if job.finished_at %>
+                <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Completed</span>
+              <% elsif job.failed_execution_id %>
+                <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800">Failed</span>
+              <% elsif job.scheduled_at && job.scheduled_at > Time.current %>
+                <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">Scheduled</span>
+              <% else %>
+                <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">Pending</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <% if job.scheduled_at && job.scheduled_at > Time.current %>
+                in <%= time_ago_in_words(job.scheduled_at) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= time_ago_in_words(job.created_at) %> ago</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="p-4 text-gray-500">No recent jobs</p>
+  <% end %>
+</div>

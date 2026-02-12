@@ -1,0 +1,68 @@
+<% content_for :title, "News Feeds - Admin" %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">News Feeds</h1>
+    <p class="text-sm text-gray-600"><%= @news_feeds.total_count %> total</p>
+  </div>
+  <%= link_to "New Feed", new_admin_news_feed_path, class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
+</div>
+
+<div class="mb-4 flex flex-wrap gap-4">
+  <%= form_with url: admin_news_feeds_path, method: :get, class: "flex gap-2", local: true do %>
+    <%= text_field_tag :search, @search, placeholder: "Search feeds...",
+        class: "rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm w-64" %>
+    <%= submit_tag "Search", class: "bg-gray-600 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700" %>
+  <% end %>
+  
+  <div class="flex gap-2">
+    <%= link_to "All", admin_news_feeds_path, class: "px-3 py-2 rounded text-sm #{params[:active].nil? ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <%= link_to "Active", admin_news_feeds_path(active: true), class: "px-3 py-2 rounded text-sm #{params[:active] == 'true' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <%= link_to "Inactive", admin_news_feeds_path(active: false), class: "px-3 py-2 rounded text-sm #{params[:active] == 'false' ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+  </div>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Feed</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @news_feeds.each do |feed| %>
+        <tr>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <% if feed.image_url.present? %>
+                <img src="<%= feed.image_url %>" class="h-8 w-8 rounded object-contain bg-gray-50">
+              <% end %>
+              <div>
+                <div class="text-sm font-medium text-gray-900"><%= feed.title %></div>
+                <div class="text-xs text-gray-500 truncate max-w-xs"><%= feed.url %></div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= feed.feed_type %></td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded text-xs <%= feed.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' %>">
+              <%= feed.active ? 'Active' : 'Inactive' %>
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= feed.news_items.count %></td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+            <%= link_to "Edit", edit_admin_news_feed_path(feed), class: "text-blue-600 hover:text-blue-900" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%= paginate @news_feeds %>
+</div>

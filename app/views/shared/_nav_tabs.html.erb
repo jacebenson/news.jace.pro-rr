@@ -1,0 +1,42 @@
+<div class="w-full px-4 mt-2">
+  <ul class="relative flex list-none flex-wrap rounded-md bg-slate-100 px-1.5 py-1.5">
+    <li class="z-30 flex-auto text-center">
+      <%= link_to "Items", items_path,
+          class: "rounded-md px-2 py-1 text-sm transition-all ease-in-out #{current_page?(items_path) ? 'bg-white text-slate-900 shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" %>
+    </li>
+
+    <li class="z-30 flex-auto text-center relative" data-controller="dropdown">
+      <button type="button" data-action="click->dropdown#toggle"
+              class="rounded-md bg-slate-100 px-2 py-1 text-sm text-slate-600 transition-all ease-in-out w-full hover:bg-slate-200">
+        Sessions
+      </button>
+      <div data-dropdown-target="menu" class="hidden absolute top-full left-0 mt-1 bg-white shadow-lg rounded-md border border-slate-200 z-50 min-w-full">
+        <%= link_to "K26 (2026)", k26_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-t-md" %>
+        <%= link_to "nullEDGE 2025", nulledge25_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "K25 (2025)", k25_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "K24 (2024)", k24_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "K23 (2023)", k23_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "K22 (2022)", k22_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "K21 (2021)", k21_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "K20 (2020)", k20_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-b-md" %>
+      </div>
+    </li>
+
+    <% if logged_in? %>
+      <li class="z-30 flex-auto text-center">
+        <%= link_to "Partners", partners_path,
+            class: "rounded-md px-2 py-1 text-sm transition-all ease-in-out #{request.path.start_with?('/p') ? 'bg-white text-slate-900 shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" %>
+      </li>
+      <li class="z-30 flex-auto text-center">
+        <%= link_to "Applications", applications_path,
+            class: "rounded-md px-2 py-1 text-sm transition-all ease-in-out #{request.path.start_with?('/a') ? 'bg-white text-slate-900 shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" %>
+      </li>
+      <% if current_user&.admin? %>
+        <li class="z-30 flex-auto text-center">
+          <%= link_to "Customers", admin_companies_path(is_customer: true),
+              class: "rounded-md px-2 py-1 text-sm transition-all ease-in-out bg-slate-100 text-slate-600 hover:bg-slate-200" %>
+        </li>
+      <% end %>
+    <% end %>
+  </ul>
+</div>

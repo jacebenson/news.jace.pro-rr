@@ -1,0 +1,54 @@
+<% content_for :title, "Admin Dashboard - News Jace Pro" %>
+
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Users</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:users]) %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">News Feeds</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:news_feeds]) %></p>
+    <p class="text-xs text-gray-400"><%= @active_feeds %> active</p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">News Items</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:news_items]) %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Participants</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:participants]) %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Companies</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:companies]) %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Knowledge Sessions</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:knowledge_sessions]) %></p>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <h3 class="text-sm font-medium text-gray-500">Store Apps</h3>
+    <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats[:store_apps]) %></p>
+  </div>
+</div>
+
+<div class="bg-white rounded-lg shadow">
+  <div class="px-4 py-3 border-b">
+    <h2 class="font-semibold text-gray-900">Recent News Items</h2>
+  </div>
+  <ul class="divide-y">
+    <% @recent_news.each do |item| %>
+      <li class="px-4 py-3 hover:bg-gray-50">
+        <%= link_to edit_admin_news_item_path(item), class: "flex items-center justify-between" do %>
+          <div>
+            <p class="font-medium text-gray-900 truncate" style="max-width: 500px;"><%= item.title %></p>
+            <p class="text-sm text-gray-500"><%= item.news_feed&.title %> - <%= time_ago_in_words(item.created_at) %> ago</p>
+          </div>
+          <span class="text-sm text-gray-400">Edit</span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>

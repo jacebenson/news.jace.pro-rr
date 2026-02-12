@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "News Jace Pro" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/favicon.png" type="image/png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-white">
+    <header class="border-b">
+      <div class="flex items-center justify-between px-4 py-2">
+        <%= link_to items_path, class: "flex items-center" do %>
+          <img src="/favicon.png" alt="logo" class="h-12">
+          <h1 class="text-3xl font-bold">
+            <span class="hidden md:inline">
+              <span class="text-blue-500">N</span>ews
+              <span class="text-blue-500">J</span>ace
+              <span class="text-blue-500">P</span>ro
+            </span>
+            <span class="md:hidden text-blue-500">NJP</span>
+          </h1>
+        <% end %>
+
+        <nav class="flex items-center space-x-2">
+          <% if logged_in? %>
+            <% if current_user.admin? %>
+              <div class="relative" data-controller="dropdown">
+                <button type="button" data-action="click->dropdown#toggle" class="flex items-center space-x-1 rounded px-2 py-1 hover:bg-gray-100">
+                  <span>Admin</span>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div data-dropdown-target="menu" class="hidden absolute right-0 z-50 mt-1 min-w-48 rounded-md border bg-white py-1 shadow-lg">
+                  <%= link_to "Dashboard", admin_root_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Jobs", admin_background_jobs_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Users", admin_users_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Companies", admin_companies_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Feeds", admin_news_feeds_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "News Items", admin_news_items_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Participants", admin_participants_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Store Apps", admin_store_apps_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                  <%= link_to "Knowledge", admin_knowledge_sessions_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="relative" data-controller="dropdown">
+              <button type="button" data-action="click->dropdown#toggle" class="flex items-center space-x-1 rounded px-2 py-1 hover:bg-gray-100">
+                <span><%= current_user.name || current_user.email.split("@").first %></span>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div data-dropdown-target="menu" class="hidden absolute right-0 z-50 mt-1 min-w-48 rounded-md border bg-white py-1 shadow-lg">
+                <%= link_to "Edit Account", account_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+                <%= button_to "Logout", logout_path, method: :delete, class: "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
+              </div>
+            </div>
+          <% else %>
+            <%= link_to "Create Account", signup_path, class: "rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700" %>
+            <%= link_to "Login", login_path, class: "px-2 py-1" %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <%= render "shared/nav_tabs" if content_for?(:show_nav_tabs) || @show_nav_tabs %>
+
+    <main class="px-4">
+      <% if notice %>
+        <div class="my-2 p-3 bg-green-100 text-green-800 rounded"><%= notice %></div>
+      <% end %>
+      <% if alert %>
+        <div class="my-2 p-3 bg-red-100 text-red-800 rounded"><%= alert %></div>
+      <% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

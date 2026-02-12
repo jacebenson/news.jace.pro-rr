@@ -1,0 +1,266 @@
+<% content_for :title, "#{@app.title} - Store Apps" %>
+
+<div class="mt-4 max-w-3xl mx-auto">
+  <%# Back link %>
+  <div class="mb-6">
+    <%= link_to "← Back to Apps", applications_path, class: "text-blue-600 hover:underline text-sm" %>
+  </div>
+
+  <%# Header %>
+  <div class="flex items-start gap-4 mb-6">
+    <% if @app.logo.present? %>
+      <img src="<%= @app.logo %>" alt="<%= @app.title %>"
+           class="h-16 w-16 rounded-lg object-contain bg-white border flex-shrink-0"
+           onerror="this.style.display='none'">
+    <% else %>
+      <div class="h-16 w-16 rounded-lg bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-400 flex-shrink-0">
+        <%= @app.title.first %>
+      </div>
+    <% end %>
+
+    <div class="flex-1 min-w-0">
+      <h1 class="text-xl font-bold text-gray-900"><%= @app.title %></h1>
+      <% if @app.company_name.present? %>
+        <p class="text-gray-600 text-sm">
+          by <%= link_to @app.company_name, applications_by_company_path(company: @app.company_name), class: "text-blue-600 hover:underline" %>
+        </p>
+      <% end %>
+      <% if @app.tagline.present? %>
+        <p class="mt-1 text-gray-700 text-sm"><%= @app.tagline %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Stats row %>
+  <div class="flex flex-wrap items-center gap-4 mb-6 text-sm">
+    <span class="inline-flex items-center gap-1.5 text-gray-700">
+      <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      <strong><%= number_with_delimiter(@app.purchase_count || 0) %></strong> installs
+    </span>
+    <span class="inline-flex items-center gap-1.5 text-gray-700">
+      <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+      <strong><%= @app.review_count || 0 %></strong> reviews
+    </span>
+    <% if @app.version.present? %>
+      <span class="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">v<%= @app.version %></span>
+    <% end %>
+    <% if @app.app_type.present? %>
+      <span class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600"><%= @app.app_type %></span>
+    <% end %>
+    <% if @app.display_price.present? %>
+      <span class="font-semibold text-green-700"><%= @app.display_price %></span>
+    <% end %>
+  </div>
+
+  <%# CTA %>
+  <% if @app.landing_page.present? %>
+    <div class="mb-8">
+      <%= link_to @app.landing_page, target: "_blank", rel: "noopener",
+          class: "inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors" do %>
+        View in ServiceNow Store
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Description %>
+  <% if @app.store_description.present? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">About</h2>
+      <div class="prose prose-sm max-w-none text-gray-700">
+        <%= simple_format(@app.store_description) %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Key Features %>
+  <% if @app.key_features.present? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Key Features</h2>
+      <div class="prose prose-sm max-w-none text-gray-700">
+        <%= simple_format(@app.key_features) %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Install History - spline chart %>
+  <% if @purchase_history.is_a?(Hash) && @purchase_history.any? %>
+    <% sorted_history = @purchase_history.sort_by { |date, _| date } %>
+    <% chart_labels = sorted_history.map { |date, _| date } %>
+    <% chart_data = sorted_history.map { |_, data| data["count"].to_i } %>
+    <div class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Install Trend</h2>
+      <div class="bg-white rounded-lg border p-4">
+        <canvas id="installChart" height="200"></canvas>
+      </div>
+      <div class="flex justify-between text-xs text-gray-400 mt-2">
+        <span>First tracked: <%= sorted_history.first&.first %></span>
+        <span>Latest: <%= sorted_history.last&.first %> (<%= chart_data.last %> installs)</span>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('installChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: <%= chart_labels.to_json.html_safe %>,
+            datasets: [{
+              label: 'Total Installs',
+              data: <%= chart_data.to_json.html_safe %>,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 6,
+              pointHoverBackgroundColor: 'rgb(59, 130, 246)',
+              pointHoverBorderColor: 'white',
+              pointHoverBorderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 13 },
+                bodyFont: { size: 12 },
+                callbacks: {
+                  title: function(context) {
+                    return context[0].label;
+                  },
+                  label: function(context) {
+                    return context.parsed.y.toLocaleString() + ' installs';
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                display: true,
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  maxTicksLimit: 6,
+                  font: { size: 11 },
+                  color: '#9ca3af'
+                }
+              },
+              y: {
+                display: true,
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                  font: { size: 11 },
+                  color: '#9ca3af',
+                  callback: function(value) {
+                    return value.toLocaleString();
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+    </script>
+  <% end %>
+
+  <%# Version History - collapsible %>
+  <% if @versions.is_a?(Array) && @versions.any? %>
+    <div class="mb-8">
+      <details class="group">
+        <summary class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 cursor-pointer hover:text-gray-700 list-none flex items-center gap-1">
+          Version History (<%= @versions.size %>)
+          <svg class="h-4 w-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </summary>
+        <div class="mt-3 space-y-3 border-l-2 border-gray-200 pl-4">
+          <% @versions.first(10).each do |version| %>
+            <div>
+              <div class="flex items-center gap-2 text-sm">
+                <span class="font-mono font-medium text-gray-900"><%= version["app_score"] || "?" %></span>
+                <% if version["publish_date"].present? %>
+                  <span class="text-gray-400"><%= version["publish_date"] %></span>
+                <% end %>
+              </div>
+              <% if version["release_notes"].present? %>
+                <div class="mt-1 text-sm text-gray-600 line-clamp-2">
+                  <%= strip_tags(version["release_notes"]).truncate(150) %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+          <% if @versions.size > 10 %>
+            <p class="text-xs text-gray-400">+ <%= @versions.size - 10 %> more versions</p>
+          <% end %>
+        </div>
+      </details>
+    </div>
+  <% end %>
+
+  <%# Availability - compact inline %>
+  <div class="mb-8">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Availability</h2>
+    <div class="flex flex-wrap gap-2 text-sm">
+      <% availability = [] %>
+      <% availability << "Existing Customers" if @app.allow_for_existing_customers %>
+      <% availability << "Non-Customers" if @app.allow_for_non_customers %>
+      <% availability << "Developer Instance" if @app.allow_on_developer_instance %>
+      <% availability << "Trial" if @app.allow_trial %>
+      <% availability << "Sub-Production" if @app.allow_on_customer_subprod %>
+      <% if availability.any? %>
+        <% availability.each do |item| %>
+          <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-green-700 text-xs">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <%= item %>
+          </span>
+        <% end %>
+      <% else %>
+        <span class="text-gray-400">No availability info</span>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Support links - if any %>
+  <% if @support_links.is_a?(Array) && @support_links.any? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Support</h2>
+      <div class="flex flex-wrap gap-3">
+        <% @support_links.each do |link| %>
+          <%= link_to link["url"], target: "_blank", rel: "noopener", class: "text-sm text-blue-600 hover:underline" do %>
+            <%= link["display_name"] || "Link" %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Footer meta %>
+  <div class="border-t pt-4 text-xs text-gray-400">
+    <% meta = [] %>
+    <% meta << "ID: #{@app.source_app_id}" if @app.source_app_id.present? %>
+    <% if @app.published_at.present? %>
+      <% meta << "Published: #{ms_to_time(@app.published_at)&.strftime('%b %Y')}" %>
+    <% end %>
+    <% if @app.last_fetched_at.present? %>
+      <% meta << "Updated: #{ms_to_time(@app.last_fetched_at)&.strftime('%b %d, %Y')}" %>
+    <% end %>
+    <%= meta.join(" · ") %>
+  </div>
+</div>

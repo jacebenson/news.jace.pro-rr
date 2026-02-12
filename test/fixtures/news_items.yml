@@ -1,0 +1,35 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  item_type: MyString
+  active: false
+  state: MyString
+  title: MyString
+  body: MyText
+  url: MyString
+  image_url: MyString
+  duration: MyString
+  published_at: 2026-02-11 23:29:49
+  event_start: 2026-02-11 23:29:49
+  event_end: 2026-02-11 23:29:49
+  event_location: MyString
+  ad_url: MyString
+  call_to_action: MyString
+  news_feed: one
+
+two:
+  item_type: MyString
+  active: false
+  state: MyString
+  title: MyString
+  body: MyText
+  url: MyString
+  image_url: MyString
+  duration: MyString
+  published_at: 2026-02-11 23:29:49
+  event_start: 2026-02-11 23:29:49
+  event_end: 2026-02-11 23:29:49
+  event_location: MyString
+  ad_url: MyString
+  call_to_action: MyString
+  news_feed: two

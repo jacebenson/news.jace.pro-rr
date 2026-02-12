@@ -1,0 +1,110 @@
+<% content_for :title, "#{@event_name} Sessions - News Jace Pro" %>
+
+<div class="mt-4">
+  <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @event_name %></h1>
+      <p class="text-gray-600"><%= @total_count %> sessions</p>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <% if logged_in? %>
+        <% if @showing_list %>
+          <%= link_to "Show All", send("#{@event}_path"), class: "text-blue-600 hover:underline" %>
+        <% else %>
+          <%= link_to "My List", send("#{@event}_list_path", list: "mine"), class: "text-blue-600 hover:underline" %>
+        <% end %>
+      <% end %>
+
+      <%= form_with url: send("#{@event}_path"), method: :get, class: "flex gap-2", local: true do |f| %>
+        <%= text_field_tag :search, @search, placeholder: "Search sessions...",
+            class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
+        <%= f.submit "Search", class: "rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Navigation tabs - Parties / All Sessions %>
+  <div class="mb-4 flex flex-wrap gap-2">
+    <%= link_to "Parties", send("#{@event}_path", tags: "party"),
+        class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags == 'party' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <%= link_to "All Sessions", send("#{@event}_path"),
+        class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+  </div>
+
+  <%# Filters %>
+  <%= form_with url: send("#{@event}_path"), method: :get, class: "mb-4 flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg", local: true do |f| %>
+    <%# Preserve search if present %>
+    <% if @search.present? %>
+      <%= hidden_field_tag :search, @search %>
+    <% end %>
+
+    <div class="flex items-center gap-2">
+      <label for="company" class="text-sm font-medium text-gray-700">Filter by Company:</label>
+      <%= select_tag :company,
+          options_for_select([["All Companies", ""]] + @all_companies.map { |c| [c, c] }, @company_filter),
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+          onchange: "this.form.submit()" %>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-gray-700">
+      <%= check_box_tag :exclude_servicenow, "1", @exclude_servicenow,
+          class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+          onchange: "this.form.submit()" %>
+      Exclude ServiceNow-only sessions
+    </label>
+
+    <span class="text-sm text-gray-500">
+      Showing <%= @sessions.total_count %> of <%= @total_count %> sessions
+    </span>
+  <% end %>
+
+  <% if @showing_list %>
+    <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+      <% if @list_owner %>
+        <p class="text-sm text-blue-800">
+          <strong><%= @list_owner == current_user ? "Your" : "#{@list_owner.name || @list_owner.email}'s" %></strong> saved sessions for <%= @event_name %>
+        </p>
+        <% if @list_owner == current_user && @shareable_url.blank? %>
+          <p class="text-xs text-blue-600 mt-1">
+            Share this list: 
+            <code class="bg-blue-100 px-1 py-0.5 rounded text-xs"><%= url_for(controller: "knowledge_sessions", action: "index", event: @event, list: current_user.id, only_path: false) %></code>
+          </p>
+        <% end %>
+      <% else %>
+        <p class="text-sm text-blue-800">
+          <% if logged_in? %>
+            You haven't saved any sessions yet.
+          <% else %>
+            <%= link_to "Log in", login_path, class: "underline" %> to save sessions to your list.
+          <% end %>
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @search.present? %>
+    <div class="mb-4">
+      <p class="text-sm text-gray-600">
+        Showing results for "<%= @search %>"
+        <%= link_to "Clear", send("#{@event}_path"), class: "text-blue-600 hover:underline ml-2" %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <% @sessions.each do |ksession| %>
+      <%= render "knowledge_sessions/card", ksession: ksession %>
+    <% end %>
+  </div>
+
+  <% if @sessions.empty? %>
+    <div class="text-center py-12">
+      <p class="text-gray-500">No sessions found</p>
+    </div>
+  <% end %>
+
+  <div class="mt-6">
+    <%= paginate @sessions %>
+  </div>
+</div>

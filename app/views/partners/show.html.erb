@@ -1,0 +1,213 @@
+<% content_for :title, "#{@partner.name} - ServiceNow Partner" %>
+
+<div class="mt-4">
+  <%# Breadcrumb %>
+  <nav class="mb-6 text-sm">
+    <%= link_to "Partners", partners_path, class: "text-blue-600 hover:underline" %>
+    <span class="text-gray-400 mx-2">/</span>
+    <span class="text-gray-600"><%= @partner.name %></span>
+  </nav>
+
+  <%# Header %>
+  <div class="mb-8 flex items-start gap-4">
+    <% if @partner.image_url.present? %>
+      <img src="<%= @partner.image_url %>" alt="<%= @partner.name %>"
+           class="h-20 w-20 rounded-lg object-contain bg-gray-50 border"
+           onerror="this.style.display='none'">
+    <% else %>
+      <div class="h-20 w-20 rounded-lg bg-slate-100 flex items-center justify-center text-2xl font-bold text-slate-400">
+        <%= @partner.name.first %>
+      </div>
+    <% end %>
+
+    <div class="flex-1">
+      <h1 class="text-2xl font-bold text-gray-900"><%= @partner.name %></h1>
+      <% if @partner.city.present? || @partner.country.present? %>
+        <p class="text-gray-600 mt-1">
+          <%= [@partner.city, @partner.state, @partner.country].compact.join(", ") %>
+        </p>
+      <% end %>
+
+      <div class="mt-3 flex flex-wrap gap-2">
+        <% if @partner.partner_level.present? %>
+          <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+            <%= @partner.partner_level %>
+          </span>
+        <% end %>
+        <% if @partner.build_level.present? %>
+          <span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+            Build: <%= @partner.build_level %>
+          </span>
+        <% end %>
+        <% if @partner.consulting_level.present? %>
+          <span class="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700">
+            Consulting: <%= @partner.consulting_level %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <%# Main Content %>
+    <div class="lg:col-span-2 space-y-6">
+
+      <%# About / Notes %>
+      <% if @partner.notes.present? %>
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">About</h2>
+          <div class="text-gray-700 prose prose-sm max-w-none">
+            <%= simple_format(@partner.notes) %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Products & Services %>
+      <% products = @partner.products_list %>
+      <% services = @partner.services_list %>
+      <% if products.any? || services.any? %>
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Products & Services</h2>
+          <% if products.any? %>
+            <div class="mb-4">
+              <h3 class="text-sm font-medium text-gray-700 mb-2">Products</h3>
+              <div class="flex flex-wrap gap-2">
+                <% products.each do |product| %>
+                  <span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm"><%= product %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <% if services.any? %>
+            <div>
+              <h3 class="text-sm font-medium text-gray-700 mb-2">Services</h3>
+              <div class="flex flex-wrap gap-2">
+                <% services.each do |service| %>
+                  <span class="bg-teal-100 text-teal-700 px-2 py-1 rounded text-sm"><%= service %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Team Members %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+          People
+          <span class="text-gray-400 font-normal">(<%= @participants.count %>)</span>
+        </h2>
+        <% if @participants.any? %>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <% @participants.each do |participant| %>
+              <%= link_to who_path(name: participant.slug), class: "flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 hover:border-blue-200 transition-colors" do %>
+                <% if participant.image_url.present? %>
+                  <img src="<%= participant.image_url %>" alt="<%= participant.name %>"
+                       class="h-12 w-12 rounded-full object-cover"
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                  <div class="h-12 w-12 rounded-full bg-slate-200 items-center justify-center text-slate-500 font-medium hidden">
+                    <%= participant.name.split.map(&:first).join.upcase[0,2] %>
+                  </div>
+                <% else %>
+                  <div class="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-medium">
+                    <%= participant.name.split.map(&:first).join.upcase[0,2] %>
+                  </div>
+                <% end %>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-gray-900 truncate"><%= participant.name %></p>
+                  <% if participant.title.present? %>
+                    <p class="text-sm text-gray-500 truncate"><%= participant.title %></p>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500">No people listed for this partner yet.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Sidebar %>
+    <div class="space-y-6">
+      <%# Links %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Links</h2>
+        <div class="space-y-3">
+          <% if @partner.website.present? %>
+            <%= link_to @partner.website, target: "_blank", rel: "noopener",
+                class: "flex items-center gap-2 text-blue-600 hover:underline" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+              </svg>
+              Website
+            <% end %>
+          <% end %>
+          <% if @partner.servicenow_url.present? %>
+            <%= link_to @partner.servicenow_url, target: "_blank", rel: "noopener",
+                class: "flex items-center gap-2 text-blue-600 hover:underline" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              ServiceNow Profile
+            <% end %>
+          <% end %>
+          <% if @partner.linkedin_url.present? %>
+            <%= link_to @partner.linkedin_url, target: "_blank", rel: "noopener",
+                class: "flex items-center gap-2 text-blue-600 hover:underline" do %>
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              LinkedIn
+            <% end %>
+          <% end %>
+          <% unless @partner.website.present? || @partner.servicenow_url.present? || @partner.linkedin_url.present? %>
+            <p class="text-gray-500 text-sm">No links available</p>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Aliases %>
+      <% aliases = @partner.alias_list %>
+      <% if aliases.any? %>
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Also Known As</h2>
+          <div class="flex flex-wrap gap-2">
+            <% aliases.each do |aka| %>
+              <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"><%= aka %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Quick Stats %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Summary</h2>
+        <dl class="space-y-3 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gray-500">People</dt>
+            <dd class="font-semibold text-gray-900"><%= @participants.count %></dd>
+          </div>
+          <% if @partner.partner_level.present? %>
+            <div class="flex justify-between">
+              <dt class="text-gray-500">Partner Level</dt>
+              <dd class="text-gray-900"><%= @partner.partner_level %></dd>
+            </div>
+          <% end %>
+          <% if @partner.build_level.present? %>
+            <div class="flex justify-between">
+              <dt class="text-gray-500">Build</dt>
+              <dd class="text-gray-900"><%= @partner.build_level %></dd>
+            </div>
+          <% end %>
+          <% if @partner.consulting_level.present? %>
+            <div class="flex justify-between">
+              <dt class="text-gray-500">Consulting</dt>
+              <dd class="text-gray-900"><%= @partner.consulting_level %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>

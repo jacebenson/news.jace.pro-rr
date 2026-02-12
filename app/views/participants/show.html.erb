@@ -1,0 +1,94 @@
+<% content_for :title, "#{@participant.name} - News Jace Pro" %>
+
+<div class="mt-4">
+  <div class="flex flex-col md:flex-row gap-6 mb-8">
+    <div class="flex-shrink-0">
+      <% if @participant.image_url.present? %>
+        <img src="<%= @participant.image_url %>" alt="<%= @participant.name %>"
+             class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-lg">
+      <% else %>
+        <div class="h-32 w-32 rounded-full bg-slate-200 flex items-center justify-center text-4xl font-bold text-slate-500">
+          <%= @participant.name.split.map(&:first).join %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="flex-1">
+      <h1 class="text-3xl font-bold text-gray-900"><%= @participant.name %></h1>
+      
+      <% if @participant.title.present? %>
+        <p class="text-lg text-gray-600 mt-1"><%= @participant.title %></p>
+      <% end %>
+
+      <% if @participant.company_name.present? || @participant.company&.name.present? %>
+        <p class="text-gray-500 mt-1">
+          <% if @participant.company %>
+            <%= link_to @participant.company.name, partners_search_path(search: @participant.company.name), class: "text-blue-600 hover:underline" %>
+          <% else %>
+            <%= @participant.company_name %>
+          <% end %>
+        </p>
+      <% end %>
+
+      <% if @participant.bio.present? %>
+        <div class="mt-4 prose prose-sm max-w-none text-gray-700">
+          <%= simple_format(@participant.bio) %>
+        </div>
+      <% end %>
+
+      <div class="mt-4 flex gap-4">
+        <% if @participant.linkedin_url.present? %>
+          <%= link_to @participant.linkedin_url, target: "_blank", rel: "noopener",
+              class: "inline-flex items-center gap-1 text-blue-600 hover:underline" do %>
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            LinkedIn
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if @news_items.any? %>
+    <section class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900">Recent News</h2>
+        <%= link_to "View all", items_by_participant_path(participant: @participant.slug), class: "text-blue-600 hover:underline text-sm" %>
+      </div>
+      
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <% @news_items.each do |item| %>
+          <%= render "news_items/card", item: item %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @knowledge_sessions.any? %>
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Conference Sessions</h2>
+      
+      <div class="space-y-4">
+        <% @knowledge_sessions.each do |session| %>
+          <div class="rounded-lg border bg-white p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+              <span class="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                <%= session.event_id&.upcase || "Conference" %>
+              </span>
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-900"><%= session.title %></h3>
+                <% if session.code.present? %>
+                  <p class="text-sm text-gray-500"><%= session.code %></p>
+                <% end %>
+                <% if session.abstract.present? %>
+                  <p class="mt-2 text-sm text-gray-600 line-clamp-2"><%= session.abstract %></p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

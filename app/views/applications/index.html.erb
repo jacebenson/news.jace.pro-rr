@@ -1,0 +1,91 @@
+<% content_for :title, "Store Apps - News Jace Pro" %>
+
+<div class="mt-4">
+  <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">ServiceNow Store Apps</h1>
+      <p class="text-gray-600"><%= @apps.total_count %> applications</p>
+    </div>
+
+    <%= form_with url: applications_search_path(search: ""), method: :get, class: "flex gap-2", local: true do |f| %>
+      <%= text_field_tag :search, @search, placeholder: "Search apps...",
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
+      <%= f.submit "Search", class: "rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <% if @search.present? || @company.present? %>
+    <div class="mb-4">
+      <p class="text-sm text-gray-600">
+        <% if @search.present? %>
+          Showing results for "<%= @search %>"
+        <% end %>
+        <% if @company.present? %>
+          by company "<%= @company %>"
+        <% end %>
+        <%= link_to "Clear", applications_path, class: "text-blue-600 hover:underline ml-2" %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <% @apps.each do |app| %>
+      <%= link_to application_path(app), class: "rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group" do %>
+        <div class="p-4 flex-1">
+          <div class="flex items-start gap-3">
+            <% if app.logo.present? %>
+              <img src="<%= app.logo %>" alt="<%= app.title %>"
+                   class="h-12 w-12 rounded object-contain bg-gray-50"
+                   onerror="this.style.display='none'">
+            <% else %>
+              <div class="h-12 w-12 rounded bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-400">
+                <%= app.title.first %>
+              </div>
+            <% end %>
+
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-900 line-clamp-1 group-hover:text-blue-600"><%= app.title %></h3>
+              <% if app.company_name.present? %>
+                <span class="text-xs text-gray-500 truncate block"><%= app.company_name %></span>
+              <% end %>
+            </div>
+          </div>
+
+          <% if app.tagline.present? %>
+            <p class="mt-2 text-sm text-gray-600 line-clamp-2"><%= app.tagline %></p>
+          <% end %>
+
+          <div class="mt-3 flex flex-wrap gap-2">
+            <% if app.app_type.present? %>
+              <span class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700"><%= app.app_type %></span>
+            <% end %>
+            <% if app.purchase_count.to_i > 0 %>
+              <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700"><%= app.purchase_count %> installs</span>
+            <% end %>
+            <% if app.review_count.to_i > 0 %>
+              <span class="rounded bg-yellow-100 px-1.5 py-0.5 text-xs text-yellow-700"><%= app.review_count %> reviews</span>
+            <% end %>
+          </div>
+
+          <% if app.display_price.present? %>
+            <p class="mt-2 text-sm font-semibold text-gray-900"><%= app.display_price %></p>
+          <% end %>
+        </div>
+
+        <div class="border-t px-4 py-2 text-sm text-blue-600">
+          View Details →
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @apps.empty? %>
+    <div class="text-center py-12">
+      <p class="text-gray-500">No applications found</p>
+    </div>
+  <% end %>
+
+  <div class="mt-6">
+    <%= paginate @apps %>
+  </div>
+</div>

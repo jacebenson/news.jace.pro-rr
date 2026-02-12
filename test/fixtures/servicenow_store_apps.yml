@@ -1,0 +1,69 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  source_app_id: MyString
+  title: MyString
+  tagline: MyString
+  store_description: MyText
+  company_name: MyString
+  company_logo: MyString
+  logo: MyString
+  app_type: MyString
+  app_sub_type: MyString
+  version: MyString
+  versions_data: MyText
+  purchase_count: 1
+  review_count: 1
+  table_count: 1
+  key_features: MyText
+  business_challenge: MyText
+  system_requirements: MyText
+  supporting_media: MyText
+  support_links: MyText
+  support_contacts: MyText
+  purchase_trend: MyText
+  display_price: MyString
+  landing_page: MyString
+  allow_for_existing_customers: false
+  allow_for_non_customers: false
+  allow_on_customer_subprod: false
+  allow_on_developer_instance: false
+  allow_on_servicenow_instance: false
+  allow_trial: false
+  allow_without_license: false
+  last_fetched_at: 2026-02-11 23:30:06
+  published_at: 2026-02-11 23:30:06
+
+two:
+  source_app_id: MyString
+  title: MyString
+  tagline: MyString
+  store_description: MyText
+  company_name: MyString
+  company_logo: MyString
+  logo: MyString
+  app_type: MyString
+  app_sub_type: MyString
+  version: MyString
+  versions_data: MyText
+  purchase_count: 1
+  review_count: 1
+  table_count: 1
+  key_features: MyText
+  business_challenge: MyText
+  system_requirements: MyText
+  supporting_media: MyText
+  support_links: MyText
+  support_contacts: MyText
+  purchase_trend: MyText
+  display_price: MyString
+  landing_page: MyString
+  allow_for_existing_customers: false
+  allow_for_non_customers: false
+  allow_on_customer_subprod: false
+  allow_on_developer_instance: false
+  allow_on_servicenow_instance: false
+  allow_trial: false
+  allow_without_license: false
+  last_fetched_at: 2026-02-11 23:30:06
+  published_at: 2026-02-11 23:30:06

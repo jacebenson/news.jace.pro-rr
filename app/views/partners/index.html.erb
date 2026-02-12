@@ -1,0 +1,163 @@
+<% content_for :title, "Partners - News Jace Pro" %>
+
+<div class="mt-4">
+  <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">ServiceNow Partners</h1>
+      <p class="text-gray-600"><%= @partners.total_count %> partners</p>
+    </div>
+
+    <%= form_with url: partners_path, method: :get, class: "flex gap-2", local: true do |f| %>
+      <%= text_field_tag :search, @search, placeholder: "Search partners...",
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
+      <%= f.submit "Search", class: "rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <%# Clickable Filters %>
+  <div class="mb-6 space-y-3">
+    <%# Partner Level Filter %>
+    <% if @partner_levels.any? %>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium text-gray-700">Partner Level:</span>
+        <% @partner_levels.each do |level| %>
+          <% active = @level == level %>
+          <%= link_to level, partners_path(level: level, build: @build, consulting: @consulting, country: @country, state: @state_filter, search: @search),
+              class: "rounded-full px-3 py-1 text-xs font-medium #{active ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        <% end %>
+        <% if @level.present? %>
+          <%= link_to "Clear", partners_path(build: @build, consulting: @consulting, country: @country, state: @state_filter, search: @search),
+              class: "text-xs text-gray-500 hover:text-gray-700" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Build Level Filter %>
+    <% if @build_levels.any? %>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium text-gray-700">Build:</span>
+        <% @build_levels.each do |level| %>
+          <% active = @build == level %>
+          <%= link_to level, partners_path(level: @level, build: level, consulting: @consulting, country: @country, state: @state_filter, search: @search),
+              class: "rounded-full px-3 py-1 text-xs font-medium #{active ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'}" %>
+        <% end %>
+        <% if @build.present? %>
+          <%= link_to "Clear", partners_path(level: @level, consulting: @consulting, country: @country, state: @state_filter, search: @search),
+              class: "text-xs text-gray-500 hover:text-gray-700" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Consulting Level Filter %>
+    <% if @consulting_levels.any? %>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium text-gray-700">Consulting:</span>
+        <% @consulting_levels.each do |level| %>
+          <% active = @consulting == level %>
+          <%= link_to level, partners_path(level: @level, build: @build, consulting: level, country: @country, state: @state_filter, search: @search),
+              class: "rounded-full px-3 py-1 text-xs font-medium #{active ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'}" %>
+        <% end %>
+        <% if @consulting.present? %>
+          <%= link_to "Clear", partners_path(level: @level, build: @build, country: @country, state: @state_filter, search: @search),
+              class: "text-xs text-gray-500 hover:text-gray-700" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Country Filter (collapsible) %>
+    <% if @countries.any? %>
+      <details class="group">
+        <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+          Country <% if @country.present? %><span class="text-blue-600">(<%= @country %>)</span><% end %>
+          <span class="text-gray-400 group-open:rotate-90 transition-transform inline-block">▶</span>
+        </summary>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <% @countries.first(20).each do |country| %>
+            <% active = @country == country %>
+            <%= link_to country, partners_path(level: @level, build: @build, consulting: @consulting, country: country, state: @state_filter, search: @search),
+                class: "rounded-full px-3 py-1 text-xs font-medium #{active ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+          <% end %>
+          <% if @country.present? %>
+            <%= link_to "Clear", partners_path(level: @level, build: @build, consulting: @consulting, state: @state_filter, search: @search),
+                class: "text-xs text-gray-500 hover:text-gray-700" %>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+  </div>
+
+  <% if @search.present? || @level.present? || @build.present? || @consulting.present? || @country.present? || @state_filter.present? %>
+    <div class="mb-4 flex items-center gap-2">
+      <p class="text-sm text-gray-600">
+        Filtered results
+        <% if @search.present? %>for "<%= @search %>"<% end %>
+      </p>
+      <%= link_to "Clear all filters", partners_path, class: "text-sm text-blue-600 hover:underline" %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    <% @partners.each do |partner| %>
+      <div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+        <div class="flex items-start gap-3">
+          <% if partner.image_url.present? %>
+            <img src="<%= partner.image_url %>" alt="<%= partner.name %>"
+                 class="h-12 w-12 rounded object-contain bg-gray-50"
+                 onerror="this.style.display='none'">
+          <% else %>
+            <div class="h-12 w-12 rounded bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-400">
+              <%= partner.name.first %>
+            </div>
+          <% end %>
+
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-gray-900 truncate"><%= partner.name %></h3>
+            
+            <% if partner.city.present? || partner.country.present? %>
+              <p class="text-xs text-gray-500 truncate">
+                <%= [partner.city, partner.state, partner.country].compact.join(", ") %>
+              </p>
+            <% end %>
+
+            <div class="mt-2 flex flex-wrap gap-1">
+              <% if partner.partner_level.present? %>
+                <span class="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700"><%= partner.partner_level %></span>
+              <% end %>
+              <% if partner.build_level.present? %>
+                <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700">Build: <%= partner.build_level %></span>
+              <% end %>
+              <% if partner.consulting_level.present? %>
+                <span class="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">Consult: <%= partner.consulting_level %></span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 flex gap-2">
+          <% if partner.website.present? %>
+            <%= link_to partner.website, target: "_blank", rel: "noopener",
+                class: "text-xs text-blue-600 hover:underline truncate" do %>
+              Website
+            <% end %>
+          <% end %>
+          <% if partner.servicenow_url.present? %>
+            <%= link_to partner.servicenow_url, target: "_blank", rel: "noopener",
+                class: "text-xs text-blue-600 hover:underline" do %>
+              ServiceNow
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @partners.empty? %>
+    <div class="text-center py-12">
+      <p class="text-gray-500">No partners found</p>
+    </div>
+  <% end %>
+
+  <div class="mt-6">
+    <%= paginate @partners %>
+  </div>
+</div>

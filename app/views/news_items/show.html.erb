@@ -1,0 +1,97 @@
+<% content_for :title, "#{@item.title} - News" %>
+
+<%
+  # Extract YouTube video ID if present
+  youtube_id = youtube_video_id(@item.body) || youtube_video_id(@item.url)
+  
+  # Check content type
+  is_video = @item.item_type == "video" || youtube_id.present?
+  is_podcast = @item.item_type == "podcast" || @item.item_type == "audio" || podcast_platform(@item.url).present?
+%>
+
+<div class="mt-4 max-w-4xl mx-auto">
+  <%# Back link %>
+  <div class="mb-4">
+    <%= link_to "← Back to News", items_path, class: "text-blue-600 hover:underline text-sm" %>
+  </div>
+
+  <%# Video embed - full width, prominent, FIRST %>
+  <% if youtube_id.present? %>
+    <div class="mb-6 w-full rounded-lg overflow-hidden bg-black" style="aspect-ratio: 16/9;">
+      <iframe 
+        class="w-full h-full" 
+        src="https://www.youtube.com/embed/<%= youtube_id %>" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        allowfullscreen>
+      </iframe>
+    </div>
+  <% end %>
+
+  <%# Title %>
+  <h1 class="text-2xl font-bold text-gray-900 mb-3"><%= @item.title %></h1>
+
+  <%# Source info %>
+  <div class="flex items-center gap-2 mb-4 text-sm text-gray-500">
+    <% if @item.news_feed&.image_url.present? %>
+      <img src="<%= @item.news_feed.image_url %>" alt="" class="h-5 w-5 rounded">
+    <% end %>
+    <span><%= @item.news_feed&.title || "Unknown source" %></span>
+    <span class="text-gray-300">·</span>
+    <span><%= ms_to_time(@item.published_at)&.strftime("%b %d, %Y") %></span>
+    <% if @item.item_type.present? %>
+      <span class="text-gray-300">·</span>
+      <span class="capitalize"><%= @item.item_type %></span>
+    <% end %>
+  </div>
+
+  <%# Participants %>
+  <% if @item.participants.any? %>
+    <div class="flex flex-wrap gap-2 mb-6">
+      <% @item.participants.each do |participant| %>
+        <%= link_to who_path(name: participant.slug),
+            class: "inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200" do %>
+          <% if participant.image_url.present? %>
+            <img src="<%= participant.image_url %>" alt="" class="h-5 w-5 rounded-full">
+          <% end %>
+          <%= participant.name %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Podcast embed - check for supported podcast platforms %>
+  <% if @item.url.present? && podcast_platform(@item.url) %>
+    <div class="mb-6">
+      <%= podcast_embed_html(@item.url, @item.title) %>
+    </div>
+  <% end %>
+
+  <%# Main image (if no video or podcast embed) %>
+  <% if !youtube_id.present? && !podcast_platform(@item.url) && @item.image_url.present? %>
+    <div class="mb-6">
+      <img src="<%= @item.image_url %>" alt="" class="rounded-lg max-w-full">
+    </div>
+  <% end %>
+
+  <%# Body content %>
+  <% if @item.body.present? %>
+    <div class="prose max-w-none text-gray-700 mb-6">
+      <%= simple_format(@item.body.gsub(/!\[.*?\]\((.*?)\)/, '<img src="\1" class="rounded-lg my-4 max-w-full">').html_safe) %>
+    </div>
+  <% end %>
+
+  <%# Source link %>
+  <% if @item.url.present? %>
+    <div class="border-t pt-4 mt-6">
+      <%= link_to @item.url, target: "_blank", rel: "noopener",
+          class: "inline-flex items-center gap-2 text-blue-600 hover:underline" do %>
+        View original source
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      <% end %>
+      <p class="text-xs text-gray-400 mt-1 truncate"><%= @item.url %></p>
+    </div>
+  <% end %>
+</div>

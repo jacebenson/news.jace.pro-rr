@@ -1,0 +1,32 @@
+<% content_for :title, "Login - News Jace Pro" %>
+
+<div class="mx-auto mt-10 max-w-md">
+  <h1 class="text-2xl font-bold text-center mb-6">Login</h1>
+
+  <%= form_with url: login_path, class: "space-y-4" do |f| %>
+    <div>
+      <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.email_field :email, required: true, autofocus: true,
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
+    </div>
+
+    <div>
+      <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.password_field :password, required: true,
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
+    </div>
+
+    <div class="flex items-center justify-between">
+      <%= link_to "Forgot password?", forgot_password_path, class: "text-sm text-blue-600 hover:underline" %>
+    </div>
+
+    <div>
+      <%= f.submit "Login", class: "w-full rounded-md bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700 cursor-pointer" %>
+    </div>
+  <% end %>
+
+  <p class="mt-4 text-center text-sm text-gray-600">
+    Don't have an account?
+    <%= link_to "Sign up", signup_path, class: "text-blue-600 hover:underline" %>
+  </p>
+</div>

@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  code: MyString
+  session_id: MyString
+  title: MyString
+  title_sort: MyString
+  abstract: MyText
+  published: MyString
+  modified: 2026-02-11 23:29:57
+  event_id: MyString
+  participants: MyText
+  times: MyText
+  recording_url: MyString
+
+two:
+  code: MyString
+  session_id: MyString
+  title: MyString
+  title_sort: MyString
+  abstract: MyText
+  published: MyString
+  modified: 2026-02-11 23:29:57
+  event_id: MyString
+  participants: MyText
+  times: MyText
+  recording_url: MyString

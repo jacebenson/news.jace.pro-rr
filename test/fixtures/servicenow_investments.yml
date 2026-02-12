@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  investment_type: MyString
+  content: MyText
+  summary: MyText
+  url: MyString
+  amount: MyString
+  currency: MyString
+  date: 2026-02-11 23:30:07
+  people: MyText
+  company_name: MyString
+
+two:
+  investment_type: MyString
+  content: MyText
+  summary: MyText
+  url: MyString
+  amount: MyString
+  currency: MyString
+  date: 2026-02-11 23:30:07
+  people: MyText
+  company_name: MyString

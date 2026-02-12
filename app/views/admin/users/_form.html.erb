@@ -1,0 +1,47 @@
+<%= form_with model: [:admin, user], class: "bg-white rounded-lg shadow p-6 max-w-2xl" do |f| %>
+  <% if user.errors.any? %>
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+      <ul class="list-disc list-inside text-red-600 text-sm">
+        <% user.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <div>
+      <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.email_field :email, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+
+    <div>
+      <%= f.label :name, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.password_field :password, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      <% if user.persisted? %>
+        <p class="mt-1 text-xs text-gray-500">Leave blank to keep current password</p>
+      <% end %>
+    </div>
+
+    <div>
+      <%= f.label :password_confirmation, "Confirm Password", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.password_field :password_confirmation, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :roles, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :roles, placeholder: "admin", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      <p class="mt-1 text-xs text-gray-500">Enter "admin" for admin access</p>
+    </div>
+
+    <div class="flex gap-4 pt-4">
+      <%= f.submit class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer" %>
+      <%= link_to "Cancel", admin_users_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+    </div>
+  </div>
+<% end %>

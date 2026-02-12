@@ -1,0 +1,2 @@
+class ServicenowInvestment < ApplicationRecord
+end

@@ -1,0 +1,57 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  alias: MyText
+  active: false
+  is_customer: false
+  is_partner: false
+  website: MyString
+  image_url: MyString
+  notes: MyText
+  city: MyString
+  state: MyString
+  country: MyString
+  build_level: MyString
+  consulting_level: MyString
+  reseller_level: MyString
+  service_provider_level: MyString
+  partner_level: MyString
+  servicenow_url: MyString
+  rss_feed_url: MyString
+  servicenow_page_url: MyString
+  products: MyText
+  services: MyText
+  last_fetched_at: 2026-02-11 23:29:42
+  last_sitemap_check: 2026-02-11 23:29:42
+  has_sitemap: false
+  last_found_in_partner_list: 2026-02-11 23:29:42
+  locked_fields: MyText
+
+two:
+  name: MyString
+  alias: MyText
+  active: false
+  is_customer: false
+  is_partner: false
+  website: MyString
+  image_url: MyString
+  notes: MyText
+  city: MyString
+  state: MyString
+  country: MyString
+  build_level: MyString
+  consulting_level: MyString
+  reseller_level: MyString
+  service_provider_level: MyString
+  partner_level: MyString
+  servicenow_url: MyString
+  rss_feed_url: MyString
+  servicenow_page_url: MyString
+  products: MyText
+  services: MyText
+  last_fetched_at: 2026-02-11 23:29:42
+  last_sitemap_check: 2026-02-11 23:29:42
+  has_sitemap: false
+  last_found_in_partner_list: 2026-02-11 23:29:42
+  locked_fields: MyText

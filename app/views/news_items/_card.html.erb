@@ -1,0 +1,124 @@
+<%
+  # Gather images: item image, participant images, images from body
+  images = []
+  images << item.image_url if item.image_url.present?
+  
+  item.participants.each do |p|
+    images << p.image_url if p.image_url.present?
+  end
+  
+  # Extract images from body
+  if item.body.present?
+    body_images = item.body.scan(/(http[s]?:\/\/[^\s]+\.(?:jpg|gif|png|jpeg))/i).flatten
+    images.concat(body_images)
+    
+    # Extract YouTube thumbnails
+    youtube_codes = item.body.scan(/youtube\.com\/watch\?v=([\w-]{11})/i).flatten
+    youtube_codes += item.body.scan(/youtu\.be\/([\w-]{11})/i).flatten
+    youtube_codes.each do |code|
+      images << "https://i3.ytimg.com/vi/#{code}/sddefault.jpg"
+    end
+  end
+  
+  images = images.uniq.first(3)
+  image = images.first
+  
+  # Determine link behavior
+  is_article = item.item_type == "article"
+  has_video = youtube_codes&.any? || item.item_type == "video"
+  has_podcast = item.item_type == "podcast"
+  
+  # Articles link to source, everything else links to our show page
+  if is_article && item.url.present?
+    primary_link = item.url
+    primary_target = "_blank"
+    show_cache_link = item.body.present?
+  else
+    primary_link = item_path(item)
+    primary_target = nil
+    show_cache_link = false
+  end
+%>
+
+<div class="flex h-full w-full max-w-sm flex-col overflow-hidden rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow">
+  <a href="<%= primary_link %>" <%= "target=\"#{primary_target}\" rel=\"noopener noreferrer\"".html_safe if primary_target %> class="block">
+    <div class="relative h-40 w-full overflow-hidden bg-gray-100">
+      <% if image.present? %>
+        <img src="<%= image %>" alt="<%= item.title %>" class="h-full w-full object-cover" loading="lazy"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="hidden h-full overflow-hidden p-3 text-left text-xs text-gray-700">
+          <%= truncate(item.body&.gsub(/[#*`]/, ''), length: 200) %>
+        </div>
+      <% else %>
+        <div class="h-full overflow-hidden p-3 text-left text-xs text-gray-700">
+          <%= truncate(item.body&.gsub(/[#*`]/, ''), length: 200) %>
+        </div>
+      <% end %>
+      
+      <%# Type badge %>
+      <% if has_video %>
+        <span class="absolute top-2 right-2 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+          <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+          Video
+        </span>
+      <% elsif has_podcast %>
+        <span class="absolute top-2 right-2 bg-purple-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+          <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4zm-2 6a5 5 0 0010 0V4a5 5 0 00-10 0v6zm5 8a1 1 0 001-1v-2a1 1 0 10-2 0v2a1 1 0 001 1z"/></svg>
+          Podcast
+        </span>
+      <% end %>
+    </div>
+  </a>
+
+  <div class="flex flex-1 flex-col p-2">
+    <a href="<%= primary_link %>" <%= "target=\"#{primary_target}\" rel=\"noopener noreferrer\"".html_safe if primary_target %> class="group">
+      <h3 class="text-sm font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
+        <%= item.title %>
+      </h3>
+    </a>
+    
+    <div class="mt-1 flex items-center gap-2 text-xs text-gray-500">
+      <% if item.news_feed&.image_url.present? %>
+        <img src="<%= item.news_feed.image_url %>" alt="" class="h-4 w-4 rounded">
+      <% end %>
+      <span class="truncate"><%= item.news_feed&.title || "Unknown" %></span>
+      <span class="text-gray-300">·</span>
+      <span class="whitespace-nowrap"><%= time_ago_in_words(ms_to_time(item.published_at)) %></span>
+    </div>
+
+    <% if item.participants.any? %>
+      <div class="mt-2 flex flex-wrap gap-1">
+        <% item.participants.first(3).each do |participant| %>
+          <%= link_to who_path(name: participant.slug),
+              class: "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-200" do %>
+            <% if participant.image_url.present? %>
+              <img src="<%= participant.image_url %>" alt="" class="h-4 w-4 rounded-full">
+            <% end %>
+            <%= participant.name.split.map(&:first).join %>
+          <% end %>
+        <% end %>
+        <% if item.participants.size > 3 %>
+          <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+            +<%= item.participants.size - 3 %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="mt-auto flex items-center gap-2 pt-2 text-xs">
+      <% if item.url.present? && !is_article %>
+        <%= link_to item.url, target: "_blank", rel: "noopener", class: "text-blue-600 hover:underline truncate flex-1" do %>
+          <%= URI.parse(item.url).host rescue "source" %>
+        <% end %>
+      <% elsif is_article && item.url.present? %>
+        <span class="text-gray-400 truncate flex-1"><%= URI.parse(item.url).host rescue "" %></span>
+      <% end %>
+      
+      <% if show_cache_link %>
+        <%= link_to item_path(item), class: "text-gray-400 hover:text-gray-600 whitespace-nowrap", title: "View cached content" do %>
+          cache
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

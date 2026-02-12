@@ -1,0 +1,84 @@
+<%= form_with model: [:admin, company], class: "bg-white rounded-lg shadow p-6 max-w-2xl" do |f| %>
+  <% if company.errors.any? %>
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+      <ul class="list-disc list-inside text-red-600 text-sm">
+        <% company.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <div>
+      <%= f.label :name, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :city, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :city, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+      <div>
+        <%= f.label :state, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :state, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :country, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :country, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :website, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.url_field :website, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :image_url, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.url_field :image_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <%= f.label :partner_level, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :partner_level, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+      <div>
+        <%= f.label :build_level, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :build_level, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+      <div>
+        <%= f.label :consulting_level, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :consulting_level, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :notes, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_area :notes, rows: 3, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div class="flex gap-6">
+      <label class="flex items-center gap-2">
+        <%= f.check_box :active, class: "rounded border-gray-300 text-blue-600" %>
+        <span class="text-sm text-gray-700">Active</span>
+      </label>
+      <label class="flex items-center gap-2">
+        <%= f.check_box :is_partner, class: "rounded border-gray-300 text-blue-600" %>
+        <span class="text-sm text-gray-700">Is Partner</span>
+      </label>
+      <label class="flex items-center gap-2">
+        <%= f.check_box :is_customer, class: "rounded border-gray-300 text-blue-600" %>
+        <span class="text-sm text-gray-700">Is Customer</span>
+      </label>
+    </div>
+
+    <div class="flex gap-4 pt-4">
+      <%= f.submit class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer" %>
+      <%= link_to "Cancel", admin_companies_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+    </div>
+  </div>
+<% end %>

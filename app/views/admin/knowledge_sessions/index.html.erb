@@ -1,0 +1,58 @@
+<% content_for :title, "Knowledge Sessions - Admin" %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Knowledge Sessions</h1>
+    <p class="text-sm text-gray-600"><%= @sessions.total_count %> total<%= " (#{@filter})" if @filter %></p>
+  </div>
+  <%= link_to "New Session", new_admin_knowledge_session_path, class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
+</div>
+
+<div class="mb-4 flex flex-wrap gap-4">
+  <%= form_with url: admin_knowledge_sessions_path, method: :get, class: "flex gap-2", local: true do %>
+    <%= text_field_tag :search, @search, placeholder: "Search sessions...",
+        class: "rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm w-64" %>
+    <%= submit_tag "Search", class: "bg-gray-600 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700" %>
+  <% end %>
+  
+  <div class="flex gap-2 flex-wrap">
+    <%= link_to "All", admin_knowledge_sessions_path, class: "px-3 py-2 rounded text-sm #{params[:event].nil? ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <% %w[k26 k25 k24 k23 k22 k21 k20 nulledge25].each do |event| %>
+      <%= link_to event.upcase, admin_knowledge_sessions_path(event: event), 
+          class: "px-3 py-2 rounded text-sm #{params[:event] == event ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <% end %>
+  </div>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Speakers</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @sessions.each do |ksession| %>
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900"><%= ksession.code %></td>
+          <td class="px-6 py-4">
+            <div class="text-sm font-medium text-gray-900 truncate max-w-md"><%= ksession.title %></div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= ksession.event_id&.upcase %></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= ksession.speakers.count %></td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+            <%= link_to "Edit", edit_admin_knowledge_session_path(ksession), class: "text-blue-600 hover:text-blue-900" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%= paginate @sessions %>
+</div>

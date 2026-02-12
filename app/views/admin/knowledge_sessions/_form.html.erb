@@ -1,0 +1,50 @@
+<%= form_with model: [:admin, session], class: "bg-white rounded-lg shadow p-6 max-w-2xl" do |f| %>
+  <% if session.errors.any? %>
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+      <ul class="list-disc list-inside text-red-600 text-sm">
+        <% session.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :code, class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      </div>
+      <div>
+        <%= f.label :event_id, "Event", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.select :event_id, options_for_select([["K26", "k26"], ["K25", "k25"], ["K24", "k24"], ["K23", "k23"], ["K22", "k22"], ["K21", "k21"], ["K20", "k20"], ["nullEDGE 25", "nulledge25"]], session.event_id),
+            {}, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :title, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :title, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :abstract, class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_area :abstract, rows: 6, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :recording_url, "Recording URL", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.url_field :recording_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
+      <%= f.label :session_id, "ServiceNow Session ID", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :session_id, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div class="flex gap-4 pt-4">
+      <%= f.submit class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer" %>
+      <%= link_to "Cancel", admin_knowledge_sessions_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+    </div>
+  </div>
+<% end %>

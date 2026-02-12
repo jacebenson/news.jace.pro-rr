@@ -1,0 +1,56 @@
+<% content_for :title, "Investments - Admin" %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">ServiceNow Investments</h1>
+    <p class="text-sm text-gray-600"><%= @investments.total_count %> total</p>
+  </div>
+  <%= link_to "New Investment", new_admin_investment_path, class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
+</div>
+
+<div class="mb-4">
+  <%= form_with url: admin_investments_path, method: :get, class: "flex gap-2", local: true do %>
+    <%= text_field_tag :search, @search, placeholder: "Search companies...",
+        class: "rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm w-64" %>
+    <%= submit_tag "Search", class: "bg-gray-600 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700" %>
+  <% end %>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @investments.each do |investment| %>
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= investment.company_name %></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= investment.investment_type %></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <% if investment.amount.present? %>
+              <%= number_to_currency(investment.amount, precision: 0) %> <%= investment.currency %>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <% if investment.date.present? %>
+              <%= ms_to_time(investment.date)&.strftime("%b %d, %Y") %>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+            <%= link_to "Edit", edit_admin_investment_path(investment), class: "text-blue-600 hover:text-blue-900" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%= paginate @investments %>
+</div>
