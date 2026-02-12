@@ -1,8 +1,12 @@
 module ApplicationHelper
   # Convert millisecond timestamp to Time object for time_ago_in_words
-  def ms_to_time(ms_timestamp)
-    return nil if ms_timestamp.nil?
-    Time.at(ms_timestamp / 1000.0)
+  # Also handles Time objects directly (for Rails native datetime columns)
+  def ms_to_time(value)
+    return nil if value.nil?
+    # If it's already a Time object, return it as-is
+    return value if value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone)
+    # Otherwise treat as milliseconds and convert
+    Time.at(value / 1000.0)
   end
 
   # Extract YouTube video ID from URL
