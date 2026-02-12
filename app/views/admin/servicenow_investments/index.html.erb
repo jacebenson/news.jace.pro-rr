@@ -39,7 +39,7 @@
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             <% if investment.date.present? %>
-              <%= ms_to_time(investment.date)&.strftime("%b %d, %Y") %>
+              <%= investment.date.strftime("%b %d, %Y") %>
             <% end %>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
