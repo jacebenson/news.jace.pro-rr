@@ -69,6 +69,9 @@ Rails.application.routes.draw do
     resources :investments, controller: "servicenow_investments"
     get "background-jobs", to: "background_jobs#index", as: :background_jobs
     post "background-jobs/run", to: "background_jobs#run_job", as: :run_job
+    post "background-jobs/cancel", to: "background_jobs#cancel_job", as: :cancel_job
+    post "background-jobs/retry-failed", to: "background_jobs#retry_failed", as: :retry_failed
+    post "background-jobs/clear-failed", to: "background_jobs#clear_failed", as: :clear_failed
   end
 
   # Catch-all slug route (must be last)

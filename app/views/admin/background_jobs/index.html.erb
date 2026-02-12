@@ -2,63 +2,104 @@
 
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Background Jobs</h1>
 
-<%# Job Triggers %>
+<%# Job Triggers with Next Run Times %>
 <div class="bg-white rounded-lg shadow p-6 mb-8">
   <h2 class="font-semibold text-gray-900 mb-4">Run Jobs Manually</h2>
   
-  <h3 class="text-sm font-medium text-gray-500 mb-2">News & Content</h3>
-  <div class="flex flex-wrap gap-4 mb-6">
-    <%= button_to "Fetch News Items", admin_run_job_path(job: "fetch_news_items"), 
-        method: :post, 
-        class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
-        data: { turbo_confirm: "Run FetchNewsItemsJob now?" } %>
-    
-    <%= button_to "Fetch Store Apps", admin_run_job_path(job: "fetch_apps"), 
-        method: :post, 
-        class: "bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700",
-        data: { turbo_confirm: "Run FetchAppsJob now? This takes ~1 hour." } %>
-    
-    <%= button_to "Enrich Items", admin_run_job_path(job: "enrich_items"), 
-        method: :post, 
-        class: "bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700",
-        data: { turbo_confirm: "Run EnrichItemJob now?" } %>
-  </div>
+  <div class="space-y-6">
+    <%# News & Content %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-500 mb-3">News & Content</h3>
+      <div class="space-y-2">
+        <%= render "job_row", 
+            job_key: "fetch_news_items",
+            job_class: "FetchNewsItemsJob",
+            label: "Fetch News Items",
+            description: "Fetches all active RSS feeds",
+            color: "blue",
+            next_run: @next_runs["FetchNewsItemsJob"] %>
+        
+        <%= render "job_row",
+            job_key: "fetch_apps",
+            job_class: "FetchAppsJob", 
+            label: "Fetch Store Apps",
+            description: "Fetches ServiceNow Store apps (~1 hour)",
+            color: "green",
+            next_run: @next_runs["FetchAppsJob"] %>
+        
+        <%= render "job_row",
+            job_key: "enrich_items",
+            job_class: "EnrichItemJob",
+            label: "Enrich Items",
+            description: "AI enrichment and image uploads",
+            color: "purple",
+            next_run: @next_runs["EnrichItemJob"] %>
+      </div>
+    </div>
 
-  <h3 class="text-sm font-medium text-gray-500 mb-2">Partners & Companies</h3>
-  <div class="flex flex-wrap gap-4 mb-6">
-    <%= button_to "Fetch Partners", admin_run_job_path(job: "fetch_partners"), 
-        method: :post, 
-        class: "bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700",
-        data: { turbo_confirm: "Fetch partners from ServiceNow Partner Portal?" } %>
-    
-    <%= button_to "Enrich Partners", admin_run_job_path(job: "enrich_partners"), 
-        method: :post, 
-        class: "bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700",
-        data: { turbo_confirm: "Run EnrichPartnersJob? This analyzes partner websites." } %>
-  </div>
+    <%# Partners & Companies %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-500 mb-3">Partners & Companies</h3>
+      <div class="space-y-2">
+        <%= render "job_row",
+            job_key: "fetch_partners",
+            job_class: "FetchPartnersJob",
+            label: "Fetch Partners",
+            description: "ServiceNow Partner Portal API",
+            color: "indigo",
+            next_run: @next_runs["FetchPartnersJob"] %>
+        
+        <%= render "job_row",
+            job_key: "enrich_partners",
+            job_class: "EnrichPartnersJob",
+            label: "Enrich Partners",
+            description: "Discover logos, RSS feeds, content",
+            color: "teal",
+            next_run: @next_runs["EnrichPartnersJob"] %>
+      </div>
+    </div>
 
-  <h3 class="text-sm font-medium text-gray-500 mb-2">Participants</h3>
-  <div class="flex flex-wrap gap-4 mb-6">
-    <%= button_to "Link Participants", admin_run_job_path(job: "link_participants"), 
-        method: :post, 
-        class: "bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700",
-        data: { turbo_confirm: "Run LinkParticipantsJob? This links participants to companies." } %>
-  </div>
+    <%# Participants %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-500 mb-3">Participants</h3>
+      <div class="space-y-2">
+        <%= render "job_row",
+            job_key: "link_participants",
+            job_class: "LinkParticipantsJob",
+            label: "Link Participants",
+            description: "Links participants to companies by name",
+            color: "orange",
+            next_run: @next_runs["LinkParticipantsJob"] %>
+      </div>
+    </div>
 
-  <h3 class="text-sm font-medium text-gray-500 mb-2">SEC Filings</h3>
-  <div class="flex flex-wrap gap-4 mb-6">
-    <%= button_to "Fetch SEC Filings", admin_run_job_path(job: "fetch_sec_filings"), 
-        method: :post, 
-        class: "bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700",
-        data: { turbo_confirm: "Fetch ServiceNow SEC filings (10-K, 10-Q, 8-K)? Requires OPENAI_API_KEY or GEMINI_API_KEY." } %>
-  </div>
+    <%# SEC Filings %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-500 mb-3">SEC Filings</h3>
+      <div class="space-y-2">
+        <%= render "job_row",
+            job_key: "fetch_sec_filings",
+            job_class: "FetchSecFilingsJob",
+            label: "Fetch SEC Filings",
+            description: "10-K, 10-Q, 8-K filings with AI summary",
+            color: "red",
+            next_run: @next_runs["FetchSecFilingsJob"] %>
+      </div>
+    </div>
 
-  <h3 class="text-sm font-medium text-gray-500 mb-2">System</h3>
-  <div class="flex flex-wrap gap-4">
-    <%= button_to "Backup Database", admin_run_job_path(job: "backup"), 
-        method: :post, 
-        class: "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700",
-        data: { turbo_confirm: "Backup database to S3? (Forces run regardless of ENABLE_BACKUP setting)" } %>
+    <%# System %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-500 mb-3">System</h3>
+      <div class="space-y-2">
+        <%= render "job_row",
+            job_key: "backup",
+            job_class: "BackupJob",
+            label: "Backup Database",
+            description: "SQLite backup to S3",
+            color: "gray",
+            next_run: @next_runs["BackupJob"] %>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -75,6 +116,16 @@
   <div class="bg-white rounded-lg shadow p-4">
     <h3 class="text-sm font-medium text-gray-500">Failed Jobs</h3>
     <p class="text-2xl font-bold <%= @failed_jobs > 0 ? 'text-red-600' : 'text-gray-900' %>"><%= @failed_jobs %></p>
+    <% if @failed_jobs > 0 %>
+      <div class="mt-2 flex gap-2">
+        <%= button_to "Retry All", admin_retry_failed_path, method: :post, 
+            class: "text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200",
+            data: { turbo_confirm: "Retry all #{@failed_jobs} failed jobs?" } %>
+        <%= button_to "Clear All", admin_clear_failed_path, method: :post,
+            class: "text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200",
+            data: { turbo_confirm: "Delete all #{@failed_jobs} failed jobs?" } %>
+      </div>
+    <% end %>
   </div>
   <div class="bg-white rounded-lg shadow p-4">
     <h3 class="text-sm font-medium text-gray-500">Items Pending Enrichment</h3>

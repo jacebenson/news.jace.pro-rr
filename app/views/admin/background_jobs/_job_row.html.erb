@@ -1,0 +1,36 @@
+<%# Renders a single job row with run button, next scheduled time, and cancel button %>
+<%# locals: job_key, job_class, label, description, color, next_run %>
+
+<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+  <div class="flex items-center gap-4">
+    <%= button_to label, admin_run_job_path(job: job_key), 
+        method: :post, 
+        class: "bg-#{color}-600 text-white px-4 py-2 rounded hover:bg-#{color}-700 text-sm font-medium",
+        data: { turbo_confirm: "Run #{job_class} now?" } %>
+    <div>
+      <p class="text-sm text-gray-600"><%= description %></p>
+    </div>
+  </div>
+  
+  <div class="flex items-center gap-4">
+    <% if next_run %>
+      <div class="text-right">
+        <p class="text-xs text-gray-500">Next scheduled run</p>
+        <p class="text-sm font-medium text-blue-600">
+          in <%= time_ago_in_words(next_run) %>
+        </p>
+      </div>
+      <%= button_to admin_cancel_job_path(job_class: job_class),
+          method: :post,
+          class: "text-red-600 hover:text-red-800 p-1",
+          title: "Cancel scheduled job",
+          data: { turbo_confirm: "Cancel all scheduled #{job_class} jobs?" } do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      <% end %>
+    <% else %>
+      <span class="text-xs text-gray-400">No scheduled run</span>
+    <% end %>
+  </div>
+</div>
