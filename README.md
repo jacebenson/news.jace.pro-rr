@@ -186,7 +186,7 @@ docker exec -it <container> bin/rails console
 
 ## Architecture Notes
 
-- **Timestamps**: Stored as Unix milliseconds in source DB, converted with `ms_to_time()` helper
+- **Timestamps**: Mixed format - some as Unix milliseconds (integer), some as Time objects. The `ms_to_time()` helper handles both
 - **JSON Fields**: `alias`, `products`, `services`, `participants`, `times` stored as JSON strings
 - **Type Column**: Renamed to `item_type`/`feed_type` to avoid Rails STI conflicts
 - **Session Variable**: Use `ksession` instead of `session` in views (conflicts with Rails helper)
