@@ -8,10 +8,13 @@
 
   <%# Header %>
   <div class="flex items-start gap-4 mb-6">
-    <% if @app.logo.present? %>
+    <% if valid_logo_url?(@app.logo) %>
       <img src="<%= @app.logo %>" alt="<%= @app.title %>"
            class="h-16 w-16 rounded-lg object-contain bg-white border flex-shrink-0"
-           onerror="this.style.display='none'">
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="h-16 w-16 rounded-lg bg-slate-100 items-center justify-center text-xl font-bold text-slate-400 flex-shrink-0 hidden">
+        <%= @app.title.first %>
+      </div>
     <% else %>
       <div class="h-16 w-16 rounded-lg bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-400 flex-shrink-0">
         <%= @app.title.first %>
@@ -52,52 +55,19 @@
     <% end %>
   </div>
 
-  <%# CTA %>
-  <% if @app.landing_page.present? %>
-    <div class="mb-8">
-      <%= link_to @app.landing_page, target: "_blank", rel: "noopener",
-          class: "inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors" do %>
-        View in ServiceNow Store
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-        </svg>
-      <% end %>
-    </div>
-  <% end %>
-
-  <%# Description %>
-  <% if @app.store_description.present? %>
-    <div class="mb-8">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">About</h2>
-      <div class="prose prose-sm max-w-none text-gray-700">
-        <%= simple_format(@app.store_description) %>
-      </div>
-    </div>
-  <% end %>
-
-  <%# Key Features %>
-  <% if @app.key_features.present? %>
-    <div class="mb-8">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Key Features</h2>
-      <div class="prose prose-sm max-w-none text-gray-700">
-        <%= simple_format(@app.key_features) %>
-      </div>
-    </div>
-  <% end %>
-
-  <%# Install History - spline chart %>
+  <%# Install History - spline chart (moved up) %>
   <% if @purchase_history.is_a?(Hash) && @purchase_history.any? %>
     <% sorted_history = @purchase_history.sort_by { |date, _| date } %>
     <% chart_labels = sorted_history.map { |date, _| date } %>
     <% chart_data = sorted_history.map { |_, data| data["count"].to_i } %>
     <div class="mb-8">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Install Trend</h2>
-      <div class="bg-white rounded-lg border p-4">
-        <canvas id="installChart" height="200"></canvas>
+      <div class="bg-white rounded-lg border p-4" style="height: 250px;">
+        <canvas id="installChart"></canvas>
       </div>
       <div class="flex justify-between text-xs text-gray-400 mt-2">
         <span>First tracked: <%= sorted_history.first&.first %></span>
-        <span>Latest: <%= sorted_history.last&.first %> (<%= chart_data.last %> installs)</span>
+        <span>Latest: <%= sorted_history.last&.first %> (<%= number_with_delimiter(chart_data.last) %> installs)</span>
       </div>
     </div>
     
@@ -105,15 +75,22 @@
             integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g" 
             crossorigin="anonymous"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('installChart').getContext('2d');
-        new Chart(ctx, {
+      function initInstallChart() {
+        const ctx = document.getElementById('installChart');
+        if (!ctx) return;
+        
+        // Destroy existing chart if any (for Turbo navigation)
+        if (ctx.chartInstance) {
+          ctx.chartInstance.destroy();
+        }
+        
+        ctx.chartInstance = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: <%= chart_labels.to_json.html_safe %>,
+            labels: <%= raw chart_labels.to_json %>,
             datasets: [{
               label: 'Total Installs',
-              data: <%= chart_data.to_json.html_safe %>,
+              data: <%= raw chart_data.to_json %>,
               borderColor: 'rgb(59, 130, 246)',
               backgroundColor: 'rgba(59, 130, 246, 0.1)',
               fill: true,
@@ -165,7 +142,7 @@
               },
               y: {
                 display: true,
-                beginAtZero: true,
+                beginAtZero: false,
                 grid: {
                   color: 'rgba(0, 0, 0, 0.05)'
                 },
@@ -182,6 +159,39 @@
         });
       });
     </script>
+  <% end %>
+
+  <%# CTA %>
+  <% if @app.landing_page.present? %>
+    <div class="mb-8">
+      <%= link_to @app.landing_page, target: "_blank", rel: "noopener",
+          class: "inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors" do %>
+        View in ServiceNow Store
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# Description %>
+  <% if @app.store_description.present? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">About</h2>
+      <div class="prose prose-sm max-w-none text-gray-700">
+        <%= simple_format(@app.store_description) %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Key Features %>
+  <% if @app.key_features.present? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Key Features</h2>
+      <div class="prose prose-sm max-w-none text-gray-700">
+        <%= simple_format(@app.key_features) %>
+      </div>
+    </div>
   <% end %>
 
   <%# Version History - collapsible %>

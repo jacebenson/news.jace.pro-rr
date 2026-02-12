@@ -48,10 +48,13 @@
       <%= link_to application_path(app), class: "rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group" do %>
         <div class="p-4 flex-1">
           <div class="flex items-start gap-3">
-            <% if app.logo.present? %>
+            <% if valid_logo_url?(app.logo) %>
               <img src="<%= app.logo %>" alt="<%= app.title %>"
                    class="h-12 w-12 rounded object-contain bg-gray-50"
-                   onerror="this.style.display='none'">
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="h-12 w-12 rounded bg-slate-100 items-center justify-center text-lg font-bold text-slate-400 hidden">
+                <%= app.title.first %>
+              </div>
             <% else %>
               <div class="h-12 w-12 rounded bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-400">
                 <%= app.title.first %>

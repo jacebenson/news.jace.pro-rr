@@ -1,4 +1,12 @@
 module ApplicationHelper
+  # Check if a store app logo URL is usable (not a broken ServiceNow internal URL)
+  def valid_logo_url?(url)
+    return false if url.blank?
+    # ServiceNow store attachment URLs require auth and don't work externally
+    return false if url.include?("appStoreAttachments.do")
+    true
+  end
+
   # Convert millisecond timestamp to Time object for time_ago_in_words
   # Also handles Time objects directly (for Rails native datetime columns)
   def ms_to_time(value)

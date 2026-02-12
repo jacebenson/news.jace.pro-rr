@@ -9,7 +9,8 @@ class Rack::Attack
 
   ### Throttle Spammy Clients ###
   # If any single client IP is making tons of requests, block them
-  throttle("req/ip", limit: 300, period: 5.minutes) do |req|
+  # 1000 requests per minute is reasonable - allows fast browsing but blocks abuse
+  throttle("req/ip", limit: 1000, period: 1.minute) do |req|
     req.ip unless req.path.start_with?("/assets")
   end
 
