@@ -5,7 +5,9 @@ module Admin
     def index
       @news_feeds = NewsFeed.all
 
-      if params[:active].present?
+      if params[:filter] == "errors"
+        @news_feeds = @news_feeds.where.not(last_error: nil)
+      elsif params[:active].present?
         @news_feeds = @news_feeds.where(active: params[:active] == "true")
       end
 

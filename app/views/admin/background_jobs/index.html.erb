@@ -146,7 +146,13 @@
       </div>
       <div>
         <span class="text-gray-500">Feeds with Errors:</span>
-        <span class="font-medium <%= @feeds_with_errors > 0 ? 'text-red-600' : '' %>"><%= @feeds_with_errors %></span>
+        <% if @feeds_with_errors > 0 %>
+          <%= link_to admin_news_feeds_path(filter: "errors"), class: "font-medium text-red-600 hover:underline" do %>
+            <%= @feeds_with_errors %>
+          <% end %>
+        <% else %>
+          <span class="font-medium">0</span>
+        <% end %>
       </div>
       <div>
         <span class="text-gray-500">Recently Fetched (30min):</span>
@@ -181,7 +187,13 @@
       </div>
       <div>
         <span class="text-gray-500">Participants Needing Link:</span>
-        <span class="font-medium <%= @participants_without_company > 0 ? 'text-yellow-600' : '' %>"><%= @participants_without_company %></span>
+        <% if @participants_without_company > 0 %>
+          <%= link_to admin_participants_path(filter: "unlinked"), class: "font-medium text-yellow-600 hover:underline" do %>
+            <%= @participants_without_company %>
+          <% end %>
+        <% else %>
+          <span class="font-medium">0</span>
+        <% end %>
       </div>
     </div>
   </div>

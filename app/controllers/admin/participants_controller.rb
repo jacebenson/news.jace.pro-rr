@@ -5,6 +5,10 @@ module Admin
     def index
       @participants = Participant.all
 
+      if params[:filter] == "unlinked"
+        @participants = @participants.where(company_id: nil).where.not(company_name: [ nil, "" ])
+      end
+
       if params[:search].present?
         @search = params[:search]
         safe_search = sanitize_sql_like(@search)

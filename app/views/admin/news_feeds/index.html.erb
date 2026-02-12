@@ -16,9 +16,10 @@
   <% end %>
   
   <div class="flex gap-2">
-    <%= link_to "All", admin_news_feeds_path, class: "px-3 py-2 rounded text-sm #{params[:active].nil? ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <%= link_to "All", admin_news_feeds_path, class: "px-3 py-2 rounded text-sm #{params[:active].nil? && params[:filter].nil? ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
     <%= link_to "Active", admin_news_feeds_path(active: true), class: "px-3 py-2 rounded text-sm #{params[:active] == 'true' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
     <%= link_to "Inactive", admin_news_feeds_path(active: false), class: "px-3 py-2 rounded text-sm #{params[:active] == 'false' ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <%= link_to "Errors", admin_news_feeds_path(filter: "errors"), class: "px-3 py-2 rounded text-sm #{params[:filter] == 'errors' ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
   </div>
 </div>
 
@@ -52,6 +53,9 @@
             <span class="px-2 py-0.5 rounded text-xs <%= feed.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' %>">
               <%= feed.active ? 'Active' : 'Inactive' %>
             </span>
+            <% if feed.last_error.present? %>
+              <span class="ml-1 px-2 py-0.5 rounded text-xs bg-red-100 text-red-700" title="<%= feed.last_error %>">Error</span>
+            <% end %>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= feed.news_items.count %></td>
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm">

@@ -8,12 +8,17 @@
   <%= link_to "New Participant", new_admin_participant_path, class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
 </div>
 
-<div class="mb-4">
+<div class="mb-4 flex flex-wrap gap-4">
   <%= form_with url: admin_participants_path, method: :get, class: "flex gap-2", local: true do %>
     <%= text_field_tag :search, @search, placeholder: "Search by name or title...",
         class: "rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm w-64" %>
     <%= submit_tag "Search", class: "bg-gray-600 text-white px-4 py-2 rounded text-sm cursor-pointer hover:bg-gray-700" %>
   <% end %>
+  
+  <div class="flex gap-2">
+    <%= link_to "All", admin_participants_path, class: "px-3 py-2 rounded text-sm #{params[:filter].nil? ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+    <%= link_to "Unlinked", admin_participants_path(filter: "unlinked"), class: "px-3 py-2 rounded text-sm #{params[:filter] == 'unlinked' ? 'bg-yellow-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}" %>
+  </div>
 </div>
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
