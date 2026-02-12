@@ -178,10 +178,30 @@ The app is deployed to Coolify at `newsrails.jace.pro`. Key settings:
 ```bash
 # Push triggers auto-deploy
 git push origin master
+```
 
-# SSH to server for debugging
-ssh root@chonky.jace.pro
-docker exec -it <container> bin/rails console
+### Rails Console Access
+
+In Coolify: **Servers** → select server → **Terminal** → then run:
+
+```bash
+bin/rails console
+```
+
+Example commands:
+```ruby
+# Migrate hotlinked images to S3
+MigrateImagesToS3Job.perform_later
+
+# Check migration progress
+s3_host = ENV["S3_HOSTNAME"]
+NewsItem.where.not(image_url: [nil, ""]).where.not("image_url LIKE ?", "https://#{s3_host}%").where.not("image_url LIKE ?", "/%").count
+
+# Run a job immediately
+FetchNewsItemsJob.perform_now
+
+# Check job queue
+SolidQueue::Job.where(finished_at: nil).count
 ```
 
 ## Architecture Notes
