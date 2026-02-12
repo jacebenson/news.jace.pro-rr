@@ -34,21 +34,213 @@
   </div>
 </div>
 
+<%# Quick Health Checks %>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <%# System Status %>
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-4 py-3 border-b">
+      <h2 class="font-semibold text-gray-900">System Status</h2>
+    </div>
+    <div class="p-4 space-y-3">
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Pending Jobs</span>
+        <span class="text-sm font-medium <%= @pending_jobs > 0 ? 'text-yellow-600' : 'text-green-600' %>">
+          <%= @pending_jobs %>
+        </span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Failed Jobs</span>
+        <span class="text-sm font-medium <%= @failed_jobs > 0 ? 'text-red-600' : 'text-green-600' %>">
+          <%= @failed_jobs %>
+          <% if @failed_jobs > 0 %>
+            <span class="text-xs text-gray-400">(check <%= link_to "Background Jobs", admin_background_jobs_path, class: "underline" %>)</span>
+          <% end %>
+        </span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Items Pending Enrichment</span>
+        <span class="text-sm font-medium <%= @items_needing_enrichment > 100 ? 'text-yellow-600' : 'text-gray-900' %>">
+          <%= number_with_delimiter(@items_needing_enrichment) %>
+        </span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Feeds with Errors</span>
+        <span class="text-sm font-medium <%= @feeds_with_errors > 0 ? 'text-red-600' : 'text-green-600' %>">
+          <%= @feeds_with_errors %>
+        </span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Participants Unlinked</span>
+        <span class="text-sm font-medium text-gray-900">
+          <%= number_with_delimiter(@participants_unlinked) %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <%# Quick Actions %>
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-4 py-3 border-b">
+      <h2 class="font-semibold text-gray-900">Quick Actions</h2>
+    </div>
+    <div class="p-4 space-y-2">
+      <%= link_to admin_background_jobs_path, class: "block p-3 rounded-lg hover:bg-gray-50 border border-gray-200" do %>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">Run Background Jobs</p>
+            <p class="text-sm text-gray-500">Fetch feeds, enrich items, backup DB</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      <% end %>
+      
+      <%= link_to admin_news_feeds_path(filter: 'errors'), class: "block p-3 rounded-lg hover:bg-gray-50 border border-gray-200" do %>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">Check Feed Errors</p>
+            <p class="text-sm text-gray-500">View feeds that failed to fetch</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      <% end %>
+      
+      <%= link_to admin_news_items_path(state: 'new'), class: "block p-3 rounded-lg hover:bg-gray-50 border border-gray-200" do %>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">Items Needing Enrichment</p>
+            <p class="text-sm text-gray-500">News items in 'new' state</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# Console Commands Reference %>
+<div class="bg-white rounded-lg shadow mb-8">
+  <div class="px-4 py-3 border-b">
+    <h2 class="font-semibold text-gray-900">Console Commands Reference</h2>
+    <p class="text-sm text-gray-500">Run these in <code class="bg-gray-100 px-1 rounded">bin/rails console</code></p>
+  </div>
+  <div class="p-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <%# Jobs %>
+      <div>
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">Background Jobs</h3>
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+          <p class="text-gray-600"># Run jobs manually</p>
+          <p>FetchNewsItemsJob.perform_now</p>
+          <p>EnrichItemJob.perform_now</p>
+          <p>BackupJob.perform_now(force: true)</p>
+          <p class="text-gray-600 mt-2"># Check job status</p>
+          <p>SolidQueue::Job.where(finished_at: nil).count</p>
+          <p>SolidQueue::FailedExecution.count</p>
+          <p class="text-gray-600 mt-2"># Retry/clear failed</p>
+          <p>SolidQueue::FailedExecution.find_each { |f| f.job.retry }</p>
+          <p>SolidQueue::FailedExecution.delete_all</p>
+        </div>
+      </div>
+
+      <%# Data Queries %>
+      <div>
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">Data Queries</h3>
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+          <p class="text-gray-600"># Count by type</p>
+          <p>NewsItem.group(:item_type).count</p>
+          <p>NewsItem.group(:state).count</p>
+          <p class="text-gray-600 mt-2"># Find problems</p>
+          <p>NewsFeed.where.not(last_error: nil).pluck(:title, :last_error)</p>
+          <p>NewsItem.where(state: 'error').limit(10)</p>
+          <p class="text-gray-600 mt-2"># Recent activity</p>
+          <p>NewsItem.where('created_at > ?', 1.day.ago).count</p>
+        </div>
+      </div>
+
+      <%# Fixes %>
+      <div>
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">Common Fixes</h3>
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+          <p class="text-gray-600"># Re-enrich failed items</p>
+          <p>NewsItem.where(state: 'error').update_all(state: 'new')</p>
+          <p class="text-gray-600 mt-2"># Link participants to companies</p>
+          <p>LinkParticipantsJob.perform_now</p>
+          <p class="text-gray-600 mt-2"># Clear feed errors</p>
+          <p>NewsFeed.update_all(last_error: nil, consecutive_failures: 0)</p>
+          <p class="text-gray-600 mt-2"># Vacuum database</p>
+          <p>ActiveRecord::Base.connection.execute("VACUUM")</p>
+        </div>
+      </div>
+
+      <%# Database %>
+      <div>
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">Database</h3>
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+          <p class="text-gray-600"># Stats</p>
+          <p>puts ActiveRecord::Base.connection.execute("SELECT page_count * page_size / 1024 / 1024 as size_mb FROM pragma_page_count(), pragma_page_size()").first</p>
+          <p class="text-gray-600 mt-2"># Backup locally (shell)</p>
+          <p class="text-green-700">$ cp storage/production.sqlite3 backup.db</p>
+          <p class="text-gray-600 mt-2"># Force S3 backup</p>
+          <p>BackupJob.perform_now(force: true)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Environment Info %>
 <div class="bg-white rounded-lg shadow">
   <div class="px-4 py-3 border-b">
-    <h2 class="font-semibold text-gray-900">Recent News Items</h2>
+    <h2 class="font-semibold text-gray-900">Environment</h2>
   </div>
-  <ul class="divide-y">
-    <% @recent_news.each do |item| %>
-      <li class="px-4 py-3 hover:bg-gray-50">
-        <%= link_to edit_admin_news_item_path(item), class: "flex items-center justify-between" do %>
-          <div>
-            <p class="font-medium text-gray-900 truncate" style="max-width: 500px;"><%= item.title %></p>
-            <p class="text-sm text-gray-500"><%= item.news_feed&.title %> - <%= time_ago_in_words(item.created_at) %> ago</p>
-          </div>
-          <span class="text-sm text-gray-400">Edit</span>
-        <% end %>
-      </li>
-    <% end %>
-  </ul>
+  <div class="p-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div>
+        <span class="text-gray-500">Rails:</span>
+        <span class="font-medium"><%= Rails::VERSION::STRING %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Ruby:</span>
+        <span class="font-medium"><%= RUBY_VERSION %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Environment:</span>
+        <span class="font-medium"><%= Rails.env %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">OpenAI:</span>
+        <span class="font-medium <%= ENV['OPENAI_API_KEY'].present? ? 'text-green-600' : 'text-gray-400' %>">
+          <%= ENV['OPENAI_API_KEY'].present? ? 'Configured' : 'Not set' %>
+        </span>
+      </div>
+      <div>
+        <span class="text-gray-500">Gemini:</span>
+        <span class="font-medium <%= ENV['GEMINI_API_KEY'].present? ? 'text-green-600' : 'text-gray-400' %>">
+          <%= ENV['GEMINI_API_KEY'].present? ? 'Configured' : 'Not set' %>
+        </span>
+      </div>
+      <div>
+        <span class="text-gray-500">S3 Bucket:</span>
+        <span class="font-medium <%= ENV['S3_BUCKET'].present? ? 'text-green-600' : 'text-gray-400' %>">
+          <%= ENV['S3_BUCKET'].present? ? ENV['S3_BUCKET'] : 'Not set' %>
+        </span>
+      </div>
+      <div>
+        <span class="text-gray-500">Backups:</span>
+        <span class="font-medium <%= ENV['ENABLE_BACKUP'] == 'true' ? 'text-green-600' : 'text-yellow-600' %>">
+          <%= ENV['ENABLE_BACKUP'] == 'true' ? 'Enabled' : 'Disabled' %>
+        </span>
+      </div>
+      <div>
+        <span class="text-gray-500">DB Size:</span>
+        <span class="font-medium"><%= @db_size_mb %> MB</span>
+      </div>
+    </div>
+  </div>
 </div>
