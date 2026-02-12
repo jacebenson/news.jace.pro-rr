@@ -20,6 +20,18 @@ class KnowledgeSession < ApplicationRecord
     nulledge25: "nulledge25"
   }.freeze
 
+  # Human-readable event names
+  EVENT_NAMES = {
+    "k20" => "K20",
+    "k21" => "K21",
+    "k22" => "K22",
+    "16590311612800012k23" => "K23",
+    "1692646803067001xk24" => "K24",
+    "1724429920965001dk25" => "K25",
+    "1754425456386001bk26" => "K26",
+    "nulledge25" => "nullEDGE 25"
+  }.freeze
+
   # Scope to get sessions by short event name (k20, k21, etc.)
   scope :for_event, ->(short_name) {
     event_id = EVENT_IDS[short_name.to_sym]
@@ -29,6 +41,16 @@ class KnowledgeSession < ApplicationRecord
       none
     end
   }
+
+  # Get human-readable event name
+  def event_name
+    EVENT_NAMES[event_id] || event_id&.upcase || "Conference"
+  end
+
+  # Get short event code (k20, k21, etc.) for URLs
+  def event_short_code
+    EVENT_IDS.key(event_id)&.to_s || event_id
+  end
 
   # JSON array fields
   def participants_array
