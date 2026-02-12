@@ -157,7 +157,11 @@
             }
           }
         });
-      });
+      }
+      
+      // Run on initial page load and Turbo navigation
+      document.addEventListener('DOMContentLoaded', initInstallChart);
+      document.addEventListener('turbo:load', initInstallChart);
     </script>
   <% end %>
 
