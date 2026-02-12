@@ -7,11 +7,26 @@
       <p class="text-gray-600"><%= @apps.total_count %> applications</p>
     </div>
 
-    <%= form_with url: applications_search_path(search: ""), method: :get, class: "flex gap-2", local: true do |f| %>
-      <%= text_field_tag :search, @search, placeholder: "Search apps...",
-          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
-      <%= f.submit "Search", class: "rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
-    <% end %>
+    <form class="flex gap-2" onsubmit="return handleAppSearch(event)">
+      <input type="text" id="app-search-input" value="<%= @search %>" placeholder="Search apps..."
+          class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm">
+      <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer">Search</button>
+      <% if @search.present? || @company.present? %>
+        <%= link_to "Clear", applications_path, class: "rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 text-sm hover:bg-gray-50" %>
+      <% end %>
+    </form>
+    <script>
+      function handleAppSearch(e) {
+        e.preventDefault();
+        const search = document.getElementById('app-search-input').value.trim();
+        if (search) {
+          window.location.href = '/a/search/' + encodeURIComponent(search);
+        } else {
+          window.location.href = '/a';
+        }
+        return false;
+      }
+    </script>
   </div>
 
   <% if @search.present? || @company.present? %>
