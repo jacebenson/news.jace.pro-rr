@@ -57,6 +57,7 @@ Rails.application.routes.draw do
   # Admin namespace
   namespace :admin do
     root "dashboard#index"
+    post "dashboard/trigger-s3-migration", to: "dashboard#trigger_s3_migration", as: :trigger_s3_migration
     resources :users
     resources :companies
     resources :participants
