@@ -84,7 +84,7 @@
         <% @knowledge_sessions.each do |ksession| %>
           <div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-start gap-3">
-              <%= link_to knowledge_sessions_path(event: ksession.event_short_code), 
+              <%= link_to "/#{ksession.event_short_code}", 
                   class: "rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-200" do %>
                 <%= ksession.event_name %>
               <% end %>
