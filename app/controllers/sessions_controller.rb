@@ -4,9 +4,10 @@ class SessionsController < ApplicationController
   end
 
   def create
-    user = User.find_by("LOWER(email) = ?", params[:email].downcase)
+    user = User.find_by("LOWER(email) = ?", params[:email].to_s.downcase)
 
-    if user&.authenticate(params[:password])
+    if user&.authenticate(params[:password].to_s)
+      reset_session  # Prevent session fixation attacks
       session[:user_id] = user.id
       redirect_to items_path, notice: "Welcome back, #{user.name || user.email}!"
     else
@@ -16,7 +17,7 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    session[:user_id] = nil
+    reset_session
     redirect_to items_path, notice: "You have been logged out"
   end
 end

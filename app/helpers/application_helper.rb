@@ -35,7 +35,8 @@ module ApplicationHelper
     html.html_safe
   end
 
-  # Render markdown to HTML using Redcarpet
+  # Render markdown to HTML using Redcarpet with sanitization
+  # This prevents XSS attacks from content that may come from external sources (RSS feeds, etc.)
   def render_markdown(text)
     return "" if text.blank?
 
@@ -55,7 +56,12 @@ module ApplicationHelper
       no_intra_emphasis: true
     )
 
-    markdown.render(text).html_safe
+    # Sanitize HTML output to prevent XSS
+    sanitize(
+      markdown.render(text),
+      tags: %w[p br strong em b i a code pre ul ol li h1 h2 h3 h4 h5 h6 blockquote table thead tbody tr th td hr span div img],
+      attributes: %w[href target rel class id src alt title width height]
+    )
   end
 
   # Podcast embed helpers

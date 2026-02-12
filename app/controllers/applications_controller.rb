@@ -5,14 +5,16 @@ class ApplicationsController < ApplicationController
 
     if params[:search].present?
       @search = params[:search]
-      search_term = "%#{@search}%"
+      safe_search = sanitize_sql_like(@search)
+      search_term = "%#{safe_search}%"
       apps = apps.where("title LIKE ? OR tagline LIKE ? OR store_description LIKE ?",
                         search_term, search_term, search_term)
     end
 
     if params[:company].present?
       @company = params[:company]
-      apps = apps.where("company_name LIKE ?", "%#{@company}%")
+      safe_company = sanitize_sql_like(@company)
+      apps = apps.where("company_name LIKE ?", "%#{safe_company}%")
     end
 
     @apps = apps.order(purchase_count: :desc).page(params[:page]).per(50)

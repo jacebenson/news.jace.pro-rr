@@ -33,7 +33,8 @@ class KnowledgeSessionsController < ApplicationController
     # Search
     if params[:search].present?
       @search = params[:search]
-      search_term = "%#{@search}%"
+      safe_search = sanitize_sql_like(@search)
+      search_term = "%#{safe_search}%"
       sessions = sessions.where("title LIKE ? OR abstract LIKE ? OR code LIKE ?",
                                 search_term, search_term, search_term)
     end
@@ -41,14 +42,16 @@ class KnowledgeSessionsController < ApplicationController
     # Tags filter (for parties, etc.)
     if params[:tags].present?
       @tags = params[:tags]
-      tag_term = "%#{@tags}%"
+      safe_tags = sanitize_sql_like(@tags)
+      tag_term = "%#{safe_tags}%"
       sessions = sessions.where("title LIKE ? OR abstract LIKE ?", tag_term, tag_term)
     end
 
     # Company filter - filter sessions by speaker's company
     if params[:company].present?
       @company_filter = params[:company]
-      company_term = "%#{@company_filter}%"
+      safe_company = sanitize_sql_like(@company_filter)
+      company_term = "%#{safe_company}%"
       session_ids_with_company = KnowledgeSessionParticipant
         .joins(:participant)
         .where("participants.company_name LIKE ?", company_term)

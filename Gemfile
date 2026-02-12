@@ -76,3 +76,6 @@ gem "ruby-openai"
 
 # AWS S3 for asset storage
 gem "aws-sdk-s3"
+
+# Rate limiting and request throttling
+gem "rack-attack"

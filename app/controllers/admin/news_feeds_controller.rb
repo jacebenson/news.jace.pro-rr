@@ -11,7 +11,8 @@ module Admin
 
       if params[:search].present?
         @search = params[:search]
-        @news_feeds = @news_feeds.where("title LIKE ? OR url LIKE ?", "%#{@search}%", "%#{@search}%")
+        safe_search = sanitize_sql_like(@search)
+        @news_feeds = @news_feeds.where("title LIKE ? OR url LIKE ?", "%#{safe_search}%", "%#{safe_search}%")
       end
 
       @news_feeds = @news_feeds.order(:title).page(params[:page]).per(50)

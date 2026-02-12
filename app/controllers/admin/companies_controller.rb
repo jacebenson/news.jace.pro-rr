@@ -19,7 +19,7 @@ module Admin
 
       if params[:search].present?
         @search = params[:search]
-        @companies = @companies.where("companies.name LIKE ?", "%#{@search}%")
+        @companies = @companies.where("companies.name LIKE ?", "%#{sanitize_sql_like(@search)}%")
       end
 
       @companies = @companies.order("companies.name").page(params[:page]).per(50)

@@ -28,4 +28,10 @@ class ApplicationController < ActionController::Base
     redirect_to items_path
     false
   end
+
+  # Sanitize user input for SQL LIKE queries to prevent wildcard injection
+  # Escapes % and _ characters that have special meaning in LIKE patterns
+  def sanitize_sql_like(string)
+    string.to_s.gsub(/[%_\\]/) { |x| "\\#{x}" }
+  end
 end

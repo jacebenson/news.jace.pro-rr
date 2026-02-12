@@ -12,7 +12,8 @@ module Admin
 
       if params[:search].present?
         @search = params[:search]
-        @sessions = @sessions.where("title LIKE ? OR code LIKE ?", "%#{@search}%", "%#{@search}%")
+        safe_search = sanitize_sql_like(@search)
+        @sessions = @sessions.where("title LIKE ? OR code LIKE ?", "%#{safe_search}%", "%#{safe_search}%")
       end
 
       @sessions = @sessions.order(:title_sort).page(params[:page]).per(50)

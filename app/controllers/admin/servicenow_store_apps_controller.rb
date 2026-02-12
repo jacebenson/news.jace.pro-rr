@@ -7,7 +7,8 @@ module Admin
 
       if params[:search].present?
         @search = params[:search]
-        @apps = @apps.where("title LIKE ? OR company_name LIKE ?", "%#{@search}%", "%#{@search}%")
+        safe_search = sanitize_sql_like(@search)
+        @apps = @apps.where("title LIKE ? OR company_name LIKE ?", "%#{safe_search}%", "%#{safe_search}%")
       end
 
       @apps = @apps.order(purchase_count: :desc).page(params[:page]).per(50)

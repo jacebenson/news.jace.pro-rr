@@ -16,7 +16,8 @@ class NewsItemsController < ApplicationController
     # Search - check title, body, url, and participant names
     if params[:search].present?
       @search = params[:search]
-      search_term = "%#{@search}%"
+      safe_search = sanitize_sql_like(@search)
+      search_term = "%#{safe_search}%"
 
       # Find participant IDs matching the search
       matching_participant_ids = Participant.where("name LIKE ?", search_term).pluck(:id)

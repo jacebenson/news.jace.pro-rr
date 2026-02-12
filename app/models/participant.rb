@@ -14,8 +14,21 @@ class Participant < ApplicationRecord
     name.parameterize
   end
 
+  # Find participant by slug (parameterized name)
+  # Uses SQL LOWER() to do case-insensitive search without loading all records
   def self.find_by_slug(slug)
-    # Try exact match first, then parameterized match
-    find_by(name: slug) || all.find { |p| p.slug == slug }
+    return nil if slug.blank?
+
+    # Try exact name match first
+    result = find_by(name: slug)
+    return result if result
+
+    # Convert slug back to potential name formats and search
+    # e.g., "john-doe" could be "John Doe", "john doe", "JOHN DOE", etc.
+    normalized_slug = slug.to_s.downcase.gsub(/[^a-z0-9]/, "")
+
+    # Search using SQL - compare normalized versions
+    # This avoids loading all records into memory
+    where("LOWER(REPLACE(REPLACE(REPLACE(name, ' ', ''), '-', ''), '_', '')) = ?", normalized_slug).first
   end
 end

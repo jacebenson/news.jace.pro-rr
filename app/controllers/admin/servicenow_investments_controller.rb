@@ -7,7 +7,8 @@ module Admin
 
       if params[:search].present?
         @search = params[:search]
-        @investments = @investments.where("company_name LIKE ? OR summary LIKE ?", "%#{@search}%", "%#{@search}%")
+        safe_search = sanitize_sql_like(@search)
+        @investments = @investments.where("company_name LIKE ? OR summary LIKE ?", "%#{safe_search}%", "%#{safe_search}%")
       end
 
       @investments = @investments.order(date: :desc).page(params[:page]).per(50)

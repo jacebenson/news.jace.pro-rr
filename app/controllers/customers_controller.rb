@@ -5,7 +5,8 @@ class CustomersController < ApplicationController
 
     if params[:search].present?
       @search = params[:search]
-      search_term = "%#{@search}%"
+      safe_search = sanitize_sql_like(@search)
+      search_term = "%#{safe_search}%"
       customers = customers.where(
         "name LIKE ? OR notes LIKE ? OR city LIKE ? OR state LIKE ? OR country LIKE ?",
         search_term, search_term, search_term, search_term, search_term
