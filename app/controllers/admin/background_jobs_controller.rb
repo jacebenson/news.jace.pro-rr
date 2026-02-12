@@ -46,6 +46,9 @@ module Admin
       when "link_participants"
         LinkParticipantsJob.perform_later
         flash[:notice] = "LinkParticipantsJob enqueued"
+      when "fetch_sec_filings"
+        FetchSecFilingsJob.perform_later
+        flash[:notice] = "FetchSecFilingsJob enqueued"
       else
         flash[:alert] = "Unknown job: #{job_name}"
       end

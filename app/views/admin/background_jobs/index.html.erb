@@ -38,11 +38,19 @@
   </div>
 
   <h3 class="text-sm font-medium text-gray-500 mb-2">Participants</h3>
-  <div class="flex flex-wrap gap-4">
+  <div class="flex flex-wrap gap-4 mb-6">
     <%= button_to "Link Participants", admin_run_job_path(job: "link_participants"), 
         method: :post, 
         class: "bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700",
         data: { turbo_confirm: "Run LinkParticipantsJob? This links participants to companies." } %>
+  </div>
+
+  <h3 class="text-sm font-medium text-gray-500 mb-2">SEC Filings</h3>
+  <div class="flex flex-wrap gap-4">
+    <%= button_to "Fetch SEC Filings", admin_run_job_path(job: "fetch_sec_filings"), 
+        method: :post, 
+        class: "bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700",
+        data: { turbo_confirm: "Fetch ServiceNow SEC filings (10-K, 10-Q, 8-K)? Requires OPENAI_API_KEY or GEMINI_API_KEY." } %>
   </div>
 </div>
 
