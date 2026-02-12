@@ -21,6 +21,13 @@ bin/rails db:setup
 
 # Run the server (includes SolidQueue workers)
 bin/dev
+
+# Stop the server
+# Ctrl+C in terminal, or if backgrounded/stuck:
+kill $(lsof -t -i:3000)
+# Or find and kill manually:
+lsof -i :3000        # Find PID
+kill -9 <PID>        # Kill it
 ```
 
 ## Environment Variables
