@@ -30,13 +30,27 @@ class KnowledgeSessionsController < ApplicationController
       end
     end
 
-    # Search
+    # Search - includes title, abstract, code, and speaker names
     if params[:search].present?
       @search = params[:search]
       safe_search = sanitize_sql_like(@search)
       search_term = "%#{safe_search}%"
-      sessions = sessions.where("title LIKE ? OR abstract LIKE ? OR code LIKE ?",
-                                search_term, search_term, search_term)
+
+      # Find session IDs that have matching speakers
+      matching_speaker_session_ids = KnowledgeSessionParticipant
+        .joins(:participant)
+        .where("participants.name LIKE ?", search_term)
+        .pluck(:knowledge_session_id)
+
+      if matching_speaker_session_ids.any?
+        sessions = sessions.where(
+          "title LIKE ? OR abstract LIKE ? OR code LIKE ? OR knowledge_sessions.id IN (?)",
+          search_term, search_term, search_term, matching_speaker_session_ids
+        )
+      else
+        sessions = sessions.where("title LIKE ? OR abstract LIKE ? OR code LIKE ?",
+                                  search_term, search_term, search_term)
+      end
     end
 
     # Tags filter (for parties, etc.)
