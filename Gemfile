@@ -73,3 +73,6 @@ gem "redcarpet"
 
 # OpenAI API for AI-powered features
 gem "ruby-openai"
+
+# AWS S3 for asset storage
+gem "aws-sdk-s3"

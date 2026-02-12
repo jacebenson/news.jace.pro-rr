@@ -5,6 +5,7 @@ class EnrichItemJob < ApplicationJob
 
   def perform(item_id = nil)
     Rails.logger.info "[ENRICH] Starting EnrichItemJob"
+    Rails.logger.info "[ENRICH] S3 enabled: #{S3Service.enabled?}"
     job_start = Time.current
 
     # Get items to enrich
@@ -55,8 +56,13 @@ class EnrichItemJob < ApplicationJob
     # Extract participants from body
     extract_participants(item) if item.body.present?
 
-    # Try to fetch missing image
-    fetch_og_image(item) if item.image_url.blank?
+    # Try to fetch and store image
+    if item.image_url.blank?
+      fetch_og_image(item)
+    elsif S3Service.enabled? && !item.image_url.start_with?("https://#{ENV['S3_HOSTNAME']}")
+      # Image URL exists but isn't on S3 yet - upload it
+      upload_image_to_s3(item)
+    end
 
     # Mark as enriched
     item.update!(state: "enriched")
@@ -99,9 +105,40 @@ class EnrichItemJob < ApplicationJob
     og_image ||= response.body.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
 
     if og_image && og_image[1].present?
-      item.update(image_url: og_image[1])
+      image_url = og_image[1]
+
+      # Upload to S3 if enabled
+      if S3Service.enabled?
+        s3_url = upload_image_url_to_s3(item.id, image_url)
+        item.update(image_url: s3_url || image_url)
+      else
+        item.update(image_url: image_url)
+      end
     end
   rescue StandardError => e
     Rails.logger.debug "[ENRICH] Failed to fetch OG image for #{item.id}: #{e.message}"
+  end
+
+  def upload_image_to_s3(item)
+    return unless item.image_url.present?
+
+    s3_url = upload_image_url_to_s3(item.id, item.image_url)
+    item.update(image_url: s3_url) if s3_url
+  end
+
+  def upload_image_url_to_s3(item_id, image_url)
+    return nil unless S3Service.enabled?
+    return nil if image_url.blank?
+
+    # Determine file extension from URL or default to jpg
+    ext = File.extname(URI.parse(image_url).path).presence || ".jpg"
+    ext = ".jpg" unless %w[.jpg .jpeg .png .gif .webp].include?(ext.downcase)
+
+    key = "news-items/#{item_id}#{ext}"
+
+    S3Service.upload_from_url(url: image_url, key: key)
+  rescue URI::InvalidURIError => e
+    Rails.logger.debug "[ENRICH] Invalid image URL for #{item_id}: #{e.message}"
+    nil
   end
 end
