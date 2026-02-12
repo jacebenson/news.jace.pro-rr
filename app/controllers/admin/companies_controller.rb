@@ -66,7 +66,7 @@ module Admin
 
     def company_params
       params.require(:company).permit(:name, :active, :is_partner, :is_customer, :website,
-                                      :image_url, :notes, :city, :state, :country,
+                                      :servicenow_url, :image_url, :notes, :city, :state, :country,
                                       :partner_level, :build_level, :consulting_level)
     end
   end

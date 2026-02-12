@@ -1,4 +1,19 @@
 class ParticipantsController < ApplicationController
+  def index
+    @show_nav_tabs = true
+    @participants = Participant.where.not(name: [ nil, "" ])
+
+    if params[:search].present?
+      @search = params[:search]
+      safe_search = sanitize_sql_like(@search)
+      search_term = "%#{safe_search}%"
+      @participants = @participants.where("name LIKE ? OR title LIKE ? OR company_name LIKE ?",
+                                          search_term, search_term, search_term)
+    end
+
+    @participants = @participants.order(:name).page(params[:page]).per(48)
+  end
+
   def show
     @show_nav_tabs = true
     @participant = Participant.find_by_slug(params[:name])

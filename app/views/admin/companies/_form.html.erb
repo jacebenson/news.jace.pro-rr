@@ -37,6 +37,11 @@
     </div>
 
     <div>
+      <%= f.label :servicenow_url, "ServiceNow Profile URL", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.url_field :servicenow_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    </div>
+
+    <div>
       <%= f.label :image_url, class: "block text-sm font-medium text-gray-700" %>
       <%= f.url_field :image_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
     </div>

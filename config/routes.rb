@@ -29,9 +29,7 @@ Rails.application.routes.draw do
   get "p/search/:search", to: "partners#index", as: :partners_search
   get "p/:id", to: "partners#show", as: :partner, constraints: { id: /\d+/ }
 
-  # Customers (/c)
-  get "c", to: "customers#index", as: :customers
-  get "c/search/:search", to: "customers#index", as: :customers_search
+  # Customers - admin only (removed public routes)
 
   # Store Apps (/a)
   get "a", to: "applications#index", as: :applications

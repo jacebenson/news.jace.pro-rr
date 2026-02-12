@@ -43,6 +43,12 @@ class PartnersController < ApplicationController
       )
     end
 
+    # Filter by has people
+    if params[:has_people] == "true"
+      @has_people = true
+      partners = partners.joins(:participants).distinct
+    end
+
     # Get filter options for the UI
     @partner_levels = Company.partners.active.where.not(partner_level: [ nil, "" ]).distinct.pluck(:partner_level).compact.sort
     @build_levels = Company.partners.active.where.not(build_level: [ nil, "" ]).distinct.pluck(:build_level).compact.sort
@@ -50,7 +56,7 @@ class PartnersController < ApplicationController
     @countries = Company.partners.active.where.not(country: [ nil, "" ]).distinct.pluck(:country).compact.sort
     @states = Company.partners.active.where.not(state: [ nil, "" ]).distinct.pluck(:state).compact.sort
 
-    @partners = partners.order(:name).page(params[:page]).per(50)
+    @partners = partners.includes(:participants).order(:name).page(params[:page]).per(50)
   end
 
   def show
