@@ -5,7 +5,9 @@
 <%# Job Triggers %>
 <div class="bg-white rounded-lg shadow p-6 mb-8">
   <h2 class="font-semibold text-gray-900 mb-4">Run Jobs Manually</h2>
-  <div class="flex flex-wrap gap-4">
+  
+  <h3 class="text-sm font-medium text-gray-500 mb-2">News & Content</h3>
+  <div class="flex flex-wrap gap-4 mb-6">
     <%= button_to "Fetch News Items", admin_run_job_path(job: "fetch_news_items"), 
         method: :post, 
         class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
@@ -20,6 +22,27 @@
         method: :post, 
         class: "bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700",
         data: { turbo_confirm: "Run EnrichItemJob now?" } %>
+  </div>
+
+  <h3 class="text-sm font-medium text-gray-500 mb-2">Partners & Companies</h3>
+  <div class="flex flex-wrap gap-4 mb-6">
+    <%= button_to "Fetch Partners", admin_run_job_path(job: "fetch_partners"), 
+        method: :post, 
+        class: "bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700",
+        data: { turbo_confirm: "Fetch partners from ServiceNow Partner Portal?" } %>
+    
+    <%= button_to "Enrich Partners", admin_run_job_path(job: "enrich_partners"), 
+        method: :post, 
+        class: "bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700",
+        data: { turbo_confirm: "Run EnrichPartnersJob? This analyzes partner websites." } %>
+  </div>
+
+  <h3 class="text-sm font-medium text-gray-500 mb-2">Participants</h3>
+  <div class="flex flex-wrap gap-4">
+    <%= button_to "Link Participants", admin_run_job_path(job: "link_participants"), 
+        method: :post, 
+        class: "bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700",
+        data: { turbo_confirm: "Run LinkParticipantsJob? This links participants to companies." } %>
   </div>
 </div>
 
@@ -65,6 +88,33 @@
       <div>
         <span class="text-gray-500">Never Fetched:</span>
         <span class="font-medium"><%= @never_fetched %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# Partner Status %>
+<div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+  <div class="px-4 py-3 border-b">
+    <h2 class="font-semibold text-gray-900">Partner & Participant Status</h2>
+  </div>
+  <div class="p-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div>
+        <span class="text-gray-500">Total Partners:</span>
+        <span class="font-medium"><%= @total_partners %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">With ServiceNow Content:</span>
+        <span class="font-medium"><%= @partners_with_servicenow_content %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">With RSS Feed:</span>
+        <span class="font-medium"><%= @partners_with_rss %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Participants Needing Link:</span>
+        <span class="font-medium <%= @participants_without_company > 0 ? 'text-yellow-600' : '' %>"><%= @participants_without_company %></span>
       </div>
     </div>
   </div>

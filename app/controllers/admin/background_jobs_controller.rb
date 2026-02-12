@@ -16,6 +16,12 @@ module Admin
       @feeds_with_errors = NewsFeed.where("error_count > 0").count
       @recently_fetched = NewsFeed.where("last_successful_fetch > ?", thirty_minutes_ago_ms).count
       @never_fetched = NewsFeed.where(last_successful_fetch: nil).count
+
+      # Partner stats
+      @total_partners = Company.partners.count
+      @partners_with_servicenow_content = Company.partners.where.not(servicenow_page_url: nil).count
+      @partners_with_rss = Company.partners.where.not(rss_feed_url: nil).count
+      @participants_without_company = Participant.where(company_id: nil).where.not(company_name: [ nil, "" ]).count
     end
 
     def run_job
@@ -31,6 +37,15 @@ module Admin
       when "enrich_items"
         EnrichItemJob.perform_later
         flash[:notice] = "EnrichItemJob enqueued"
+      when "fetch_partners"
+        FetchPartnersJob.perform_later
+        flash[:notice] = "FetchPartnersJob enqueued"
+      when "enrich_partners"
+        EnrichPartnersJob.perform_later
+        flash[:notice] = "EnrichPartnersJob enqueued"
+      when "link_participants"
+        LinkParticipantsJob.perform_later
+        flash[:notice] = "LinkParticipantsJob enqueued"
       else
         flash[:alert] = "Unknown job: #{job_name}"
       end

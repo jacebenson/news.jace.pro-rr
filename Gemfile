@@ -70,3 +70,6 @@ gem "httparty"
 # HTML to Markdown conversion
 gem "reverse_markdown"
 gem "redcarpet"
+
+# OpenAI API for AI-powered features
+gem "ruby-openai"
