@@ -49,6 +49,9 @@ module Admin
       when "fetch_sec_filings"
         FetchSecFilingsJob.perform_later
         flash[:notice] = "FetchSecFilingsJob enqueued"
+      when "backup"
+        BackupJob.perform_later(force: true)
+        flash[:notice] = "BackupJob enqueued (forced)"
       else
         flash[:alert] = "Unknown job: #{job_name}"
       end
