@@ -69,3 +69,4 @@ gem "httparty"
 
 # HTML to Markdown conversion
 gem "reverse_markdown"
+gem "redcarpet"
