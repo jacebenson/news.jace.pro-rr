@@ -123,18 +123,24 @@
   </div>
 </div>
 
-<%# Console Commands Reference %>
+<%# Console Commands Reference - collapsible on mobile %>
 <div class="bg-white rounded-lg shadow mb-8">
-  <div class="px-4 py-3 border-b">
-    <h2 class="font-semibold text-gray-900">Console Commands Reference</h2>
-    <p class="text-sm text-gray-500">Run these in <code class="bg-gray-100 px-1 rounded">bin/rails console</code></p>
-  </div>
-  <div class="p-4">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <details class="group">
+    <summary class="px-4 py-3 border-b cursor-pointer list-none flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-gray-900">Console Commands Reference</h2>
+        <p class="text-sm text-gray-500">Run these in <code class="bg-gray-100 px-1 rounded">bin/rails console</code></p>
+      </div>
+      <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </summary>
+    <div class="p-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <%# Jobs %>
       <div>
         <h3 class="text-sm font-semibold text-gray-700 mb-2">Background Jobs</h3>
-        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1 overflow-x-auto">
           <p class="text-gray-600"># Run jobs manually</p>
           <p>FetchNewsItemsJob.perform_now</p>
           <p>EnrichItemJob.perform_now</p>
@@ -151,7 +157,7 @@
       <%# Data Queries %>
       <div>
         <h3 class="text-sm font-semibold text-gray-700 mb-2">Data Queries</h3>
-        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1 overflow-x-auto">
           <p class="text-gray-600"># Count by type</p>
           <p>NewsItem.group(:item_type).count</p>
           <p>NewsItem.group(:state).count</p>
@@ -166,7 +172,7 @@
       <%# Fixes %>
       <div>
         <h3 class="text-sm font-semibold text-gray-700 mb-2">Common Fixes</h3>
-        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1 overflow-x-auto">
           <p class="text-gray-600"># Re-enrich failed items</p>
           <p>NewsItem.where(state: 'error').update_all(state: 'new')</p>
           <p class="text-gray-600 mt-2"># Link participants to companies</p>
@@ -181,7 +187,7 @@
       <%# Database %>
       <div>
         <h3 class="text-sm font-semibold text-gray-700 mb-2">Database & Server</h3>
-        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1">
+        <div class="bg-gray-50 rounded p-3 font-mono text-xs space-y-1 overflow-x-auto">
           <p class="text-gray-600"># Start server</p>
           <p class="text-green-700">$ bin/dev</p>
           <p class="text-gray-600 mt-2"># Stop server (if stuck)</p>
@@ -195,7 +201,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </details>
 </div>
 
 <%# Environment Info %>

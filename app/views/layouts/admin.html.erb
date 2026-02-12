@@ -12,9 +12,52 @@
   </head>
 
   <body class="bg-gray-100">
-    <div class="min-h-screen flex">
-      <!-- Sidebar -->
-      <aside class="w-64 bg-slate-800 text-white flex-shrink-0">
+    <div class="min-h-screen md:flex">
+      <!-- Mobile header -->
+      <div class="md:hidden bg-slate-800 text-white p-4 flex items-center justify-between">
+        <%= link_to items_path, class: "flex items-center gap-2" do %>
+          <img src="/favicon.png" alt="logo" class="h-8">
+          <span class="font-bold">News Jace Pro</span>
+        <% end %>
+        <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="p-2 rounded hover:bg-slate-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile menu (hidden by default) -->
+      <nav id="mobile-menu" class="hidden md:hidden bg-slate-800 text-white px-4 pb-4 space-y-1">
+        <%= link_to "Dashboard", admin_root_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path == admin_root_path ? 'bg-slate-700' : ''}" %>
+        <%= link_to "Users", admin_users_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/users') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "Companies", admin_companies_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/companies') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "News Feeds", admin_news_feeds_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/news_feeds') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "News Items", admin_news_items_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/news_items') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "Participants", admin_participants_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/participants') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "Store Apps", admin_store_apps_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/store_apps') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "Knowledge", admin_knowledge_sessions_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/knowledge_sessions') ? 'bg-slate-700' : ''}" %>
+        <%= link_to "Investments", admin_investments_path,
+            class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/investments') ? 'bg-slate-700' : ''}" %>
+        <div class="pt-2 mt-2 border-t border-slate-700">
+          <%= link_to "Background Jobs", admin_background_jobs_path,
+              class: "block px-3 py-2 rounded hover:bg-slate-700" %>
+        </div>
+        <div class="pt-2 mt-2 border-t border-slate-700 text-sm text-slate-400">
+          <span><%= current_user.email %></span>
+          <%= button_to "Logout", logout_path, method: :delete, class: "block mt-1 hover:text-white" %>
+        </div>
+      </nav>
+
+      <!-- Desktop Sidebar -->
+      <aside class="hidden md:block w-64 bg-slate-800 text-white flex-shrink-0 min-h-screen relative">
         <div class="p-4 border-b border-slate-700">
           <%= link_to items_path, class: "flex items-center gap-2" do %>
             <img src="/favicon.png" alt="logo" class="h-8">
@@ -58,7 +101,7 @@
       </aside>
 
       <!-- Main content -->
-      <main class="flex-1 p-6">
+      <main class="flex-1 p-4 md:p-6 overflow-x-auto">
         <% if notice %>
           <div class="mb-4 p-3 bg-green-100 text-green-800 rounded"><%= notice %></div>
         <% end %>
