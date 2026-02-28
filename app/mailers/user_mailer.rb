@@ -4,9 +4,20 @@ class UserMailer < ApplicationMailer
   def welcome_email(user)
     @user = user
 
-    # Render templates
-    html_content = render_to_string(template: "user_mailer/welcome_email", layout: "mailer", formats: [ :html ])
-    text_content = render_to_string(template: "user_mailer/welcome_email", layout: "mailer", formats: [ :text ])
+    # Use ActionController renderer to render templates
+    html_content = ApplicationController.render(
+      template: "user_mailer/welcome_email",
+      layout: "mailer",
+      assigns: { user: @user },
+      formats: [ :html ]
+    )
+
+    text_content = ApplicationController.render(
+      template: "user_mailer/welcome_email",
+      layout: "mailer",
+      assigns: { user: @user },
+      formats: [ :text ]
+    )
 
     # Send via Mailgun HTTP API
     send_via_mailgun_api(
@@ -20,9 +31,20 @@ class UserMailer < ApplicationMailer
   def password_reset(user)
     @user = user
 
-    # Render templates
-    html_content = render_to_string(template: "user_mailer/password_reset", layout: "mailer", formats: [ :html ])
-    text_content = render_to_string(template: "user_mailer/password_reset", layout: "mailer", formats: [ :text ])
+    # Use ActionController renderer to render templates
+    html_content = ApplicationController.render(
+      template: "user_mailer/password_reset",
+      layout: "mailer",
+      assigns: { user: @user },
+      formats: [ :html ]
+    )
+
+    text_content = ApplicationController.render(
+      template: "user_mailer/password_reset",
+      layout: "mailer",
+      assigns: { user: @user },
+      formats: [ :text ]
+    )
 
     # Send via Mailgun HTTP API
     send_via_mailgun_api(
