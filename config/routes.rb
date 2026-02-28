@@ -74,6 +74,7 @@ Rails.application.routes.draw do
         post :link_company
       end
       resources :mvp_awards, only: [ :new, :create, :destroy ]
+      resources :startup_founders, only: [ :new, :create, :destroy ]
     end
     resources :news_feeds
     resources :news_items

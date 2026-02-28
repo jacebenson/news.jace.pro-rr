@@ -45,6 +45,18 @@
                       </span>
                     <% end %>
                   <% end %>
+                  <%# Show Startup Founder badges %>
+                  <% if speaker.is_startup_founder? %>
+                    <% speaker.startup_founders.each do |founder| %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800"
+                            title="Founder of #{founder.company_name}">
+                        <svg class="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <%= founder.company_name %>
+                      </span>
+                    <% end %>
+                  <% end %>
                 </div>
                 <% if speaker.title.present? || speaker.company_name.present? %>
                   <div class="text-xs text-gray-500 truncate">

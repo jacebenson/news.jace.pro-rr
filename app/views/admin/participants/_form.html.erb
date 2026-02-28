@@ -134,6 +134,48 @@
       <% end %>
     </div>
 
+    <%# Startup Founder Section %>
+    <div class="border-t border-gray-200 pt-6 mt-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Startup Founder</h3>
+        <span class="text-sm text-gray-500"><%= participant.startup_founders.count %> companies</span>
+      </div>
+      
+      <% if participant.startup_founders.any? %>
+        <div class="space-y-2 mb-4">
+          <% participant.startup_founders.each do |founder| %>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center gap-3">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span class="text-sm font-medium text-gray-900"><%= founder.company_name %></span>
+                <% if founder.source_url.present? %>
+                  <%= link_to founder.source_url, target: "_blank", rel: "noopener", class: "text-blue-600 hover:underline text-xs" do %>
+                    <svg class="h-3.5 w-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Source
+                  <% end %>
+                <% end %>
+              </div>
+              <%= link_to "Remove", admin_participant_startup_founder_path(participant, founder), 
+                  method: :delete, 
+                  data: { confirm: "Are you sure?" },
+                  class: "text-red-600 hover:text-red-800 text-sm" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      
+      <%= link_to new_admin_participant_startup_founder_path(participant), class: "inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800" do %>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Startup Founder Record
+      <% end %>
+    </div>
+
     <div class="flex gap-4 pt-4">
       <%= f.submit class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer" %>
       <%= link_to "Cancel", admin_participants_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
