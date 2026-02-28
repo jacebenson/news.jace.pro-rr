@@ -61,7 +61,7 @@ module Admin
       params.require(:servicenow_store_app).permit(:title, :tagline, :store_description,
                                                    :company_name, :logo, :app_type, :landing_page,
                                                    :source_app_id, :listing_id, :purchase_count,
-                                                   :review_count, :display_price)
+                                                   :review_count, :display_price, :featured_icon)
     end
   end
 end

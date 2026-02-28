@@ -37,6 +37,11 @@
       </div>
       <div>
         <%= f.label :logo, "Logo URL", class: "block text-sm font-medium text-gray-700" %>
+        <% if app.logo.present? %>
+          <div class="mb-2">
+            <img src="<%= app.logo %>" alt="Logo preview" class="h-16 w-16 rounded-lg object-contain bg-white border">
+          </div>
+        <% end %>
         <%= f.url_field :logo, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
       </div>
     </div>
@@ -46,14 +51,26 @@
       <%= f.url_field :landing_page, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
     </div>
 
-    <div>
-      <%= f.label :source_app_id, "Source App ID", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_field :source_app_id, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :source_app_id, "Source App ID", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :source_app_id, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
+      <div>
+        <%= f.label :listing_id, "Listing ID", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :listing_id, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      </div>
     </div>
 
     <div>
-      <%= f.label :listing_id, "Listing ID", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_field :listing_id, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      <%= f.label :featured_icon, "Featured Icon", class: "block text-sm font-medium text-gray-700" %>
+      <% if app.featured_icon.present? %>
+        <div class="mb-2 flex items-center gap-2">
+          <img src="https://store.servicenow.com/<%= app.featured_icon %>" alt="Featured icon preview" class="h-16 w-16 rounded-lg object-contain bg-white border">
+          <span class="text-sm text-gray-500"><%= app.featured_icon %></span>
+        </div>
+      <% end %>
+      <%= f.text_field :featured_icon, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
     </div>
 
     <div class="grid grid-cols-2 gap-4">

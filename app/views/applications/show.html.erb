@@ -10,7 +10,7 @@
   <div class="flex items-start gap-4 mb-6">
     <% if valid_logo_url?(@app.logo) %>
       <img src="<%= @app.logo %>" alt="<%= @app.title %>"
-           class="h-16 w-16 rounded-lg object-contain bg-white border flex-shrink-0"
+           class="h-16 w-16 rounded-lg object-contain bg-white border border-gray-200 flex-shrink-0"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
       <div class="h-16 w-16 rounded-lg bg-slate-100 items-center justify-center text-xl font-bold text-slate-400 flex-shrink-0 hidden">
         <%= @app.title.first %>
