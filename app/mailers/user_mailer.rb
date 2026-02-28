@@ -1,27 +1,16 @@
 class UserMailer < ApplicationMailer
   default from: "news@jace.pro"
 
+  # Ensure all URLs in emails use the correct host
+  default_url_options[:host] = "news.jace.pro"
+  default_url_options[:protocol] = "https"
+
   def welcome_email(user)
     @user = user
 
-    # Use ActionController renderer with correct URL options
-    renderer = ApplicationController.renderer.new(
-      default_url_options: { host: "news.jace.pro", protocol: "https" }
-    )
-
-    html_content = renderer.render(
-      template: "user_mailer/welcome_email",
-      layout: "mailer",
-      assigns: { user: @user },
-      formats: [ :html ]
-    )
-
-    text_content = renderer.render(
-      template: "user_mailer/welcome_email",
-      layout: "mailer",
-      assigns: { user: @user },
-      formats: [ :text ]
-    )
+    # Render templates with URL helpers using correct host
+    html_content = render_email_content("welcome_email", :html)
+    text_content = render_email_content("welcome_email", :text)
 
     # Send via Mailgun HTTP API
     send_via_mailgun_api(
@@ -35,24 +24,9 @@ class UserMailer < ApplicationMailer
   def password_reset(user)
     @user = user
 
-    # Use ActionController renderer with correct URL options
-    renderer = ApplicationController.renderer.new(
-      default_url_options: { host: "news.jace.pro", protocol: "https" }
-    )
-
-    html_content = renderer.render(
-      template: "user_mailer/password_reset",
-      layout: "mailer",
-      assigns: { user: @user },
-      formats: [ :html ]
-    )
-
-    text_content = renderer.render(
-      template: "user_mailer/password_reset",
-      layout: "mailer",
-      assigns: { user: @user },
-      formats: [ :text ]
-    )
+    # Render templates with URL helpers using correct host
+    html_content = render_email_content("password_reset", :html)
+    text_content = render_email_content("password_reset", :text)
 
     # Send via Mailgun HTTP API
     send_via_mailgun_api(
@@ -64,6 +38,40 @@ class UserMailer < ApplicationMailer
   end
 
   private
+
+  def render_email_content(template_name, format)
+    # Use ActionView to render the template with proper context
+    view = ActionView::Base.new(ActionMailer::Base.view_paths, {}, self)
+    view.class_eval do
+      include ApplicationHelper
+      include Rails.application.routes.url_helpers
+
+      def default_url_options
+        { host: "news.jace.pro", protocol: "https" }
+      end
+    end
+
+    view.instance_variable_set(:@user, @user)
+
+    # Find and render the layout
+    layout = view.lookup_context.find_layout("mailer", [ format ])
+
+    # Find and render the template content
+    template = view.lookup_context.find_template("user_mailer/#{template_name}", [], false, [], formats: [ format ])
+    content = template.render(view, {})
+
+    # Wrap in layout if found
+    if layout
+      view.instance_variable_set(:@content_for_layout, content)
+      layout.render(view, {})
+    else
+      content
+    end
+  rescue => e
+    Rails.logger.error("Error rendering email template #{template_name}: #{e.message}")
+    Rails.logger.error(e.backtrace.first(10).join("\n"))
+    "Email content rendering failed"
+  end
 
   def send_via_mailgun_api(to:, subject:, html:, text:)
     response = HTTParty.post(
