@@ -1,46 +1,93 @@
 <% content_for :title, "Test Email - Admin" %>
 
-<div class="max-w-2xl">
+<div class="max-w-4xl">
   <h1 class="text-2xl font-bold mb-6">Test Email</h1>
 
-  <%= form_with url: admin_email_tests_path, method: :post, class: "space-y-4" do |f| %>
+  <%= form_with url: admin_email_tests_path, method: :post, class: "space-y-4", data: { turbo: false } do |f| %>
+    <div>
+      <%= f.label :template, "Email Template", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :template,
+          options_for_select([['Custom', 'custom']] + Admin::EmailTestsController::AVAILABLE_TEMPLATES.map { |k, v| [v, k] }, @template),
+          {},
+          {
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border",
+            onchange: "window.location.href='#{new_admin_email_test_path}?template=' + this.value"
+          } %>
+    </div>
+
     <div>
       <%= f.label :recipient, "Recipient Email", class: "block text-sm font-medium text-gray-700" %>
       <%= f.email_field :recipient, 
-          value: params[:recipient],
+          value: @recipient,
           required: true,
           class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
     </div>
 
-    <div>
-      <%= f.label :subject, "Subject", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_field :subject, 
-          value: params[:subject],
-          required: true,
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
-    </div>
+    <% if @template == 'custom' %>
+      <div>
+        <%= f.label :subject, "Subject", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :subject, 
+            value: params[:subject],
+            required: true,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
+      </div>
+
+      <div>
+        <%= f.label :body, "Body (Plain Text)", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :body, 
+            value: params[:body],
+            required: true,
+            rows: 10,
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
+      </div>
+    <% else %>
+      <% if @preview %>
+        <div class="bg-gray-50 rounded-lg p-4 border">
+          <h3 class="font-semibold mb-2">Preview:</h3>
+          
+          <div class="mb-4">
+            <span class="text-sm font-medium text-gray-600">Subject:</span>
+            <span class="text-sm"><%= @preview[:subject] %></span>
+          </div>
+          
+          <div class="mb-2">
+            <span class="text-sm font-medium text-gray-600">HTML Version:</span>
+          </div>
+          <div class="bg-white border rounded p-3 mb-4 max-h-64 overflow-auto">
+            <iframe srcdoc="<%= escape_javascript(@preview[:html]) %>" class="w-full h-48 border-0"></iframe>
+          </div>
+          
+          <div class="mb-2">
+            <span class="text-sm font-medium text-gray-600">Text Version:</span>
+          </div>
+          <pre class="bg-white border rounded p-3 text-sm max-h-48 overflow-auto whitespace-pre-wrap"><%= @preview[:text] %></pre>
+        </div>
+      <% end %>
+    <% end %>
 
     <div>
-      <%= f.label :body, "Body (Plain Text)", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_area :body, 
-          value: params[:body],
-          required: true,
-          rows: 10,
-          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border" %>
-    </div>
-
-    <div>
-      <%= f.submit "Send Test Email", 
+      <%= f.submit @template == 'custom' ? "Send Custom Email" : "Send Template Email", 
           class: "w-full rounded-md bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700 cursor-pointer" %>
     </div>
   <% end %>
 
   <div class="mt-8 p-4 bg-gray-50 rounded-lg">
-    <h2 class="font-semibold mb-2">Notes:</h2>
-    <ul class="text-sm text-gray-600 space-y-1">
-      <li>• Uses Mailgun HTTP API directly (bypasses SMTP)</li>
-      <li>• Email will be sent from: news@jace.pro</li>
-      <li>• Requires MAILGUN_API_KEY environment variable</li>
+    <h2 class="font-semibold mb-2">Available Templates:</h2>
+    <ul class="text-sm text-gray-600 space-y-2">
+      <li>
+        <strong>Welcome Email</strong> - Sent to new users after signup
+      </li>
+      <li>
+        <strong>Password Reset</strong> - Sent when user requests password reset
+      </li>
+      <li>
+        <strong>Custom</strong> - Send a custom email with your own subject and body
+      </li>
     </ul>
+    <div class="mt-4 pt-4 border-t border-gray-200">
+      <p class="text-sm text-gray-500">
+        Uses Mailgun HTTP API • Sent from: news@jace.pro
+      </p>
+    </div>
   </div>
 </div>

@@ -1,18 +1,12 @@
 class UserMailer < ApplicationMailer
   default from: "news@jace.pro"
 
-  # Ensure all URLs in emails use the correct host
-  default_url_options[:host] = "news.jace.pro"
-  default_url_options[:protocol] = "https"
-
   def welcome_email(user)
     @user = user
 
-    # Render templates with URL helpers using correct host
-    html_content = render_email_content("welcome_email", :html)
-    text_content = render_email_content("welcome_email", :text)
+    html_content = welcome_email_html
+    text_content = welcome_email_text
 
-    # Send via Mailgun HTTP API
     send_via_mailgun_api(
       to: @user.email,
       subject: "Welcome to news.jace.pro!",
@@ -24,11 +18,9 @@ class UserMailer < ApplicationMailer
   def password_reset(user)
     @user = user
 
-    # Render templates with URL helpers using correct host
-    html_content = render_email_content("password_reset", :html)
-    text_content = render_email_content("password_reset", :text)
+    html_content = password_reset_html
+    text_content = password_reset_text
 
-    # Send via Mailgun HTTP API
     send_via_mailgun_api(
       to: @user.email,
       subject: "Password reset instructions",
@@ -39,38 +31,108 @@ class UserMailer < ApplicationMailer
 
   private
 
-  def render_email_content(template_name, format)
-    # Use ActionView to render the template with proper context
-    view = ActionView::Base.new(ActionMailer::Base.view_paths, {}, self)
-    view.class_eval do
-      include ApplicationHelper
-      include Rails.application.routes.url_helpers
+  def welcome_email_html
+    name = @user.name || @user.email
+    <<-HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <h1>Welcome to news.jace.pro!</h1>
+#{'  '}
+  <p>Hi #{h(name)},</p>
+#{'  '}
+  <p>Thanks for signing up for news.jace.pro. Your account has been created successfully.</p>
+#{'  '}
+  <p>You can now:</p>
+  <ul>
+    <li>Browse the latest ServiceNow news</li>
+    <li>Save Knowledge conference sessions to your personal list</li>
+    <li>Manage your account settings</li>
+  </ul>
+#{'  '}
+  <p><a href="https://news.jace.pro/i">Start browsing</a></p>
+#{'  '}
+  <p>Best regards,<br>The news.jace.pro team</p>
+</body>
+</html>
+    HTML
+  end
 
-      def default_url_options
-        { host: "news.jace.pro", protocol: "https" }
-      end
-    end
+  def welcome_email_text
+    name = @user.name || @user.email
+    <<-TEXT
+Welcome to news.jace.pro!
 
-    view.instance_variable_set(:@user, @user)
+Hi #{name},
 
-    # Find and render the layout
-    layout = view.lookup_context.find_layout("mailer", [ format ])
+Thanks for signing up for news.jace.pro. Your account has been created successfully.
 
-    # Find and render the template content
-    template = view.lookup_context.find_template("user_mailer/#{template_name}", [], false, [], formats: [ format ])
-    content = template.render(view, {})
+You can now:
+- Browse the latest ServiceNow news
+- Save Knowledge conference sessions to your personal list
+- Manage your account settings
 
-    # Wrap in layout if found
-    if layout
-      view.instance_variable_set(:@content_for_layout, content)
-      layout.render(view, {})
-    else
-      content
-    end
-  rescue => e
-    Rails.logger.error("Error rendering email template #{template_name}: #{e.message}")
-    Rails.logger.error(e.backtrace.first(10).join("\n"))
-    "Email content rendering failed"
+Start browsing: https://news.jace.pro/i
+
+Best regards,
+The news.jace.pro team
+    TEXT
+  end
+
+  def password_reset_html
+    name = @user.name || @user.email
+    token = @user.reset_token
+    <<-HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <h1>Password Reset Instructions</h1>
+#{'  '}
+  <p>Hi #{h(name)},</p>
+#{'  '}
+  <p>Someone requested a password reset for your news.jace.pro account. If this was you, click the link below to reset your password:</p>
+#{'  '}
+  <p><a href="https://news.jace.pro/reset-password?token=#{token}">Reset my password</a></p>
+#{'  '}
+  <p>This link will expire in 2 hours.</p>
+#{'  '}
+  <p>If you didn't request this, please ignore this email. Your password will remain unchanged.</p>
+#{'  '}
+  <p>Best regards,<br>The news.jace.pro team</p>
+</body>
+</html>
+    HTML
+  end
+
+  def password_reset_text
+    name = @user.name || @user.email
+    token = @user.reset_token
+    <<-TEXT
+Password Reset Instructions
+
+Hi #{name},
+
+Someone requested a password reset for your news.jace.pro account. If this was you, click the link below to reset your password:
+
+Reset my password: https://news.jace.pro/reset-password?token=#{token}
+
+This link will expire in 2 hours.
+
+If you didn't request this, please ignore this email. Your password will remain unchanged.
+
+Best regards,
+The news.jace.pro team
+    TEXT
+  end
+
+  def h(text)
+    ERB::Util.html_escape(text)
   end
 
   def send_via_mailgun_api(to:, subject:, html:, text:)
