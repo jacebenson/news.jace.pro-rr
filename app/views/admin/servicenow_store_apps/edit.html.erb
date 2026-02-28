@@ -3,9 +3,14 @@
 <div class="mb-6">
   <h1 class="text-2xl font-bold text-gray-900">Edit Store App</h1>
   <p class="text-gray-600"><%= @app.title %></p>
+  <div class="mt-2 text-sm text-gray-500">
+    <span class="mr-4">Installs: <strong class="text-gray-900"><%= number_with_delimiter(@app.purchase_count) %></strong></span>
+    <span class="mr-4">Reviews: <strong class="text-gray-900"><%= @app.review_count %></strong></span>
+    <span>Last fetched: <%= @app.last_fetched_at ? time_ago_in_words(Time.at(@app.last_fetched_at / 1000)) + " ago" : "Never" %></span>
+  </div>
 </div>
 
-<div class="mb-6 flex gap-2">
+<div class="mb-6 flex gap-2 items-center">
   <%= button_to refresh_admin_store_app_path(@app), method: :post, 
       class: "inline-flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm" do %>
     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,6 +22,8 @@
   <%= link_to admin_store_apps_path, class: "inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm" do %>
     ← Back to Apps
   <% end %>
+  
+  <span class="text-xs text-gray-500 italic">(takes ~10-30 seconds, then refresh page)</span>
 </div>
 
 <%= render "form", app: @app %>

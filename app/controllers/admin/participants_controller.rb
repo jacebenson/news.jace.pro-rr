@@ -3,7 +3,7 @@ module Admin
     before_action :set_participant, only: %i[show edit update destroy merge compare]
 
     def index
-      @participants = Participant.includes(:company)
+      @participants = Participant.includes(:company, :mvp_awards)
 
       # Count for filter badges
       @unlinked_count = Participant.where(company_id: nil).where.not(company_name: [ nil, "" ]).count

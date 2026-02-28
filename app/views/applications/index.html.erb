@@ -149,3 +149,23 @@
     <%= paginate @apps, params: request.query_parameters %>
   </div>
 </div>
+
+<script>
+  // Submit filter forms when Enter is pressed in any input/select field
+  document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form[action="<%= applications_path %>"]');
+    
+    forms.forEach(form => {
+      const inputs = form.querySelectorAll('input:not([type="submit"]), select');
+      
+      inputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            form.submit();
+          }
+        });
+      });
+    });
+  });
+</script>

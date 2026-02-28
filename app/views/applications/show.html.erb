@@ -197,8 +197,9 @@
                 ticks: {
                   font: { size: 11 },
                   color: '#9ca3af',
+                  precision: 0,
                   callback: function(value) {
-                    return value.toLocaleString();
+                    return Math.round(value).toLocaleString();
                   }
                 }
               }
@@ -211,6 +212,91 @@
       document.addEventListener('DOMContentLoaded', initInstallChart);
       document.addEventListener('turbo:load', initInstallChart);
     </script>
+    
+    <%# Install Trend Data Table - Collapsible %>
+    <div class="mt-4">
+      <details class="group">
+        <summary class="text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800 list-none flex items-center gap-1">
+          View Install Data
+          <svg class="h-4 w-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </summary>
+        <div class="mt-3 bg-white rounded-lg border overflow-hidden">
+          <div class="max-h-64 overflow-y-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+              <thead class="bg-gray-50 sticky top-0">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Install Count</th>
+                  <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <% 
+                  # Build list of dates where count changed (plus most recent)
+                  sorted_data = sorted_history.sort_by { |date, _| date }.reverse
+                  change_dates = []
+                  
+                  sorted_data.each_with_index do |(date, data), index|
+                    count = data["count"].to_i
+                    if index == 0
+                      change_dates << { date: date, count: count }
+                    else
+                      prev_count = sorted_data[index - 1][1]["count"].to_i
+                      change_dates << { date: date, count: count } if count != prev_count
+                    end
+                  end
+                  
+                  # Build rows with single gap between each change
+                  rows = []
+                  change_dates.each_with_index do |data_row, index|
+                    # Calculate change (increase from this date to the next/more recent date)
+                    if index == 0
+                      change = 0
+                    else
+                      # Previous row in the list is more recent, so change = more_recent - this_date
+                      change = change_dates[index - 1][:count] - data_row[:count]
+                    end
+                    
+                    rows << { type: :data, date: data_row[:date], count: data_row[:count], change: change }
+                    
+                    # Add gap to next change date
+                    if index < change_dates.length - 1
+                      next_date = change_dates[index + 1][:date]
+                      days_between = (Date.parse(data_row[:date]) - Date.parse(next_date)).to_i - 1
+                      rows << { type: :gap, days: days_between } if days_between > 0
+                    end
+                  end
+                %>
+                
+                <% rows.each do |row| %>
+                  <% if row[:type] == :gap %>
+                    <tr class="bg-gray-50">
+                      <td colspan="3" class="px-4 py-1 text-xs text-gray-500 italic text-center">
+                        <%= row[:days] %> days of no change
+                      </td>
+                    </tr>
+                  <% else %>
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-2 text-gray-900 whitespace-nowrap"><%= row[:date] %></td>
+                      <td class="px-4 py-2 text-right font-medium text-gray-900"><%= number_with_delimiter(row[:count]) %></td>
+                      <td class="px-4 py-2 text-right">
+                        <% if row[:change] > 0 %>
+                          <span class="text-green-600">+<%= number_with_delimiter(row[:change]) %></span>
+                        <% elsif row[:change] < 0 %>
+                          <span class="text-red-600"><%= number_with_delimiter(row[:change]) %></span>
+                        <% else %>
+                          <span class="text-gray-400">-</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
   <% end %>
 
   <%# Description %>
