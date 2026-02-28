@@ -1,0 +1,17 @@
+<h1>Welcome to news.jace.pro!</h1>
+
+<p>Hi <%= @user.name || @user.email %>,</p>
+
+<p>Thanks for signing up for news.jace.pro. Your account has been created successfully.</p>
+
+<p>You can now:
+<ul>
+  <li>Browse the latest ServiceNow news</li>
+  <li>Save Knowledge conference sessions to your personal list</li>
+  <li>Manage your account settings</li>
+</ul>
+</p>
+
+<p><%= link_to "Start browsing", items_url %></p>
+
+<p>Best regards,<br>The news.jace.pro team</p>
