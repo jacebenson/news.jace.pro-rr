@@ -4,15 +4,19 @@ class UserMailer < ApplicationMailer
   def welcome_email(user)
     @user = user
 
-    # Use ActionController renderer to render templates
-    html_content = ApplicationController.render(
+    # Use ActionController renderer with correct URL options
+    renderer = ApplicationController.renderer.new(
+      default_url_options: { host: "news.jace.pro", protocol: "https" }
+    )
+
+    html_content = renderer.render(
       template: "user_mailer/welcome_email",
       layout: "mailer",
       assigns: { user: @user },
       formats: [ :html ]
     )
 
-    text_content = ApplicationController.render(
+    text_content = renderer.render(
       template: "user_mailer/welcome_email",
       layout: "mailer",
       assigns: { user: @user },
@@ -31,15 +35,19 @@ class UserMailer < ApplicationMailer
   def password_reset(user)
     @user = user
 
-    # Use ActionController renderer to render templates
-    html_content = ApplicationController.render(
+    # Use ActionController renderer with correct URL options
+    renderer = ApplicationController.renderer.new(
+      default_url_options: { host: "news.jace.pro", protocol: "https" }
+    )
+
+    html_content = renderer.render(
       template: "user_mailer/password_reset",
       layout: "mailer",
       assigns: { user: @user },
       formats: [ :html ]
     )
 
-    text_content = ApplicationController.render(
+    text_content = renderer.render(
       template: "user_mailer/password_reset",
       layout: "mailer",
       assigns: { user: @user },
