@@ -101,24 +101,38 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
           <%# Participant Link %>
           <%= link_to who_path(name: participant.slug), class: "block p-4" do %>
-            <%# Name, Title, Company, and Award Count %>
-            <div class="mb-3">
-              <h3 class="text-base font-semibold text-gray-900 truncate"><%= participant.name %></h3>
-              <% if participant.title.present? %>
-                <p class="text-xs text-gray-600 truncate mt-0.5"><%= participant.title %></p>
-              <% end %>
-              <% if participant.company_name.present? || participant.company&.name.present? %>
-                <p class="text-xs text-blue-600 truncate mt-0.5">
-                  <% if participant.company %>
-                    <%= participant.company.name %>
-                  <% else %>
-                    <%= participant.company_name %>
-                  <% end %>
-                </p>
-              <% end %>
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 mt-1.5">
-                <%= data[:award_count] %> <%= data[:award_count] == 1 ? 'Award' : 'Awards' %>
-              </span>
+            <%# Avatar and Basic Info %>
+            <div class="flex items-start gap-3 mb-3">
+              <%# Avatar %>
+              <div class="flex-shrink-0">
+                <% if participant.image_url.present? %>
+                  <img src="<%= participant.image_url %>" alt="<%= participant.name %>" class="h-12 w-12 rounded-full object-cover border border-gray-200">
+                <% else %>
+                  <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                    <%= participant.name&.split&.map(&:first)&.join&.upcase || "?" %>
+                  </div>
+                <% end %>
+              </div>
+              
+              <%# Name, Title, Company, and Award Count %>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-semibold text-gray-900 truncate"><%= participant.name %></h3>
+                <% if participant.title.present? %>
+                  <p class="text-xs text-gray-600 truncate mt-0.5"><%= participant.title %></p>
+                <% end %>
+                <% if participant.company_name.present? || participant.company&.name.present? %>
+                  <p class="text-xs text-blue-600 truncate mt-0.5">
+                    <% if participant.company %>
+                      <%= participant.company.name %>
+                    <% else %>
+                      <%= participant.company_name %>
+                    <% end %>
+                  </p>
+                <% end %>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 mt-1.5">
+                  <%= data[:award_count] %> <%= data[:award_count] == 1 ? 'Award' : 'Awards' %>
+                </span>
+              </div>
             </div>
             
             <%# Awards List - Compact %>
