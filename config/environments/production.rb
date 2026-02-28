@@ -65,7 +65,7 @@ Rails.application.configure do
     address: "smtp.mailgun.org",
     port: 587,
     domain: "news.jace.pro",
-    user_name: ENV["MAILGUN_SMTP_USERNAME"] || "postmaster@news.jace.pro",
+    user_name: "api",
     password: ENV["MAILGUN_API_KEY"],
     authentication: :plain,
     enable_starttls_auto: true
