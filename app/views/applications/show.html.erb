@@ -22,15 +22,27 @@
     <% end %>
 
     <div class="flex-1 min-w-0">
-      <h1 class="text-xl font-bold text-gray-900"><%= @app.title %></h1>
-      <% if @app.company_name.present? %>
-        <p class="text-gray-600 text-sm">
-          by <%= link_to @app.company_name, applications_by_company_path(company: @app.company_name), class: "text-blue-600 hover:underline" %>
-        </p>
-      <% end %>
-      <% if @app.tagline.present? %>
-        <p class="mt-1 text-gray-700 text-sm"><%= @app.tagline %></p>
-      <% end %>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900"><%= @app.title %></h1>
+          <% if @app.company_name.present? %>
+            <p class="text-gray-600 text-sm">
+              by <%= link_to @app.company_name, applications_by_company_path(company: @app.company_name), class: "text-blue-600 hover:underline" %>
+            </p>
+          <% end %>
+          <% if @app.tagline.present? %>
+            <p class="mt-1 text-gray-700 text-sm"><%= @app.tagline %></p>
+          <% end %>
+        </div>
+        <% store_url = @app.landing_page.present? ? @app.landing_page : "https://store.servicenow.com/store/app/#{@app.listing_id || @app.source_app_id}" %>
+        <%= link_to store_url, target: "_blank", rel: "noopener",
+            class: "inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors text-sm whitespace-nowrap" do %>
+          View in Store
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        <% end %>
+      </div>
     </div>
   </div>
 
@@ -53,6 +65,32 @@
     <% if @app.display_price.present? %>
       <span class="font-semibold text-green-700"><%= @app.display_price %></span>
     <% end %>
+    <% if @app.table_count.to_i > 0 %>
+      <span class="inline-flex items-center gap-1 text-gray-600">
+        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+        <%= @app.table_count %> tables
+      </span>
+    <% end %>
+  </div>
+
+  <%# Availability - compact inline %>
+  <div class="mb-8">
+    <div class="flex flex-wrap gap-2 text-sm">
+      <% availability = [] %>
+      <% availability << "Existing Customers" if @app.allow_for_existing_customers %>
+      <% availability << "Non-Customers" if @app.allow_for_non_customers %>
+      <% availability << "Developer Instance" if @app.allow_on_developer_instance %>
+      <% availability << "Trial" if @app.allow_trial %>
+      <% availability << "Sub-Production" if @app.allow_on_customer_subprod %>
+      <% if availability.any? %>
+        <% availability.each do |item| %>
+          <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-green-700 text-xs">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <%= item %>
+          </span>
+        <% end %>
+      <% end %>
+    </div>
   </div>
 
   <%# Install History - spline chart (moved up) %>
@@ -165,19 +203,6 @@
     </script>
   <% end %>
 
-  <%# CTA %>
-  <% if @app.landing_page.present? %>
-    <div class="mb-8">
-      <%= link_to @app.landing_page, target: "_blank", rel: "noopener",
-          class: "inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors" do %>
-        View in ServiceNow Store
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-        </svg>
-      <% end %>
-    </div>
-  <% end %>
-
   <%# Description %>
   <% if @app.store_description.present? %>
     <div class="mb-8">
@@ -210,7 +235,7 @@
           <% @versions.first(10).each do |version| %>
             <div>
               <div class="flex items-center gap-2 text-sm">
-                <span class="font-mono font-medium text-gray-900"><%= version["app_score"] || "?" %></span>
+                <span class="font-mono font-medium text-gray-900">v<%= version["store_version"] || version["version"] || "?" %></span>
                 <% if version["publish_date"].present? %>
                   <span class="text-gray-400"><%= version["publish_date"] %></span>
                 <% end %>
@@ -229,29 +254,6 @@
       </details>
     </div>
   <% end %>
-
-  <%# Availability - compact inline %>
-  <div class="mb-8">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Availability</h2>
-    <div class="flex flex-wrap gap-2 text-sm">
-      <% availability = [] %>
-      <% availability << "Existing Customers" if @app.allow_for_existing_customers %>
-      <% availability << "Non-Customers" if @app.allow_for_non_customers %>
-      <% availability << "Developer Instance" if @app.allow_on_developer_instance %>
-      <% availability << "Trial" if @app.allow_trial %>
-      <% availability << "Sub-Production" if @app.allow_on_customer_subprod %>
-      <% if availability.any? %>
-        <% availability.each do |item| %>
-          <span class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-green-700 text-xs">
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-            <%= item %>
-          </span>
-        <% end %>
-      <% else %>
-        <span class="text-gray-400">No availability info</span>
-      <% end %>
-    </div>
-  </div>
 
   <%# Support links - if any %>
   <% if @support_links.is_a?(Array) && @support_links.any? %>

@@ -10,7 +10,7 @@ class FetchAppsJob < ApplicationJob
 
     begin
       # Step 1: Get the store page to extract auth token and cookies
-      response = HTTParty.get(STORE_URL, timeout: 30, headers: user_agent_headers)
+      response = HTTParty.get(STORE_URL, timeout: 30)
 
       unless response.success?
         Rails.logger.error "[APPS] Failed to fetch store page: #{response.code}"
@@ -71,25 +71,36 @@ class FetchAppsJob < ApplicationJob
 
   private
 
-  def user_agent_headers
-    {
-      "User-Agent" => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
-    }
-  end
-
   def extract_gck(html)
     match = html.match(/var g_ck = ['"]([^'"]+)['"]/)
     match[1] if match
   end
 
   def extract_cookies(response)
-    cookies = []
-    if response.headers["set-cookie"]
-      Array(response.headers["set-cookie"]).each do |cookie|
-        cookies << cookie.split(";").first
+    # HTTParty concatenates multiple set-cookie headers into one string
+    # Format: "name1=val1; attr; attr, name2=val2; attr; attr"
+    # We need to split by cookie name patterns, not just commas
+    raw_cookie_str = response.headers["set-cookie"]
+    return "" if raw_cookie_str.blank?
+
+    cookie_names = %w[BIGipServerpool JSESSIONID glide_user glide_user_session glide_user_route glide_node_id_for_js]
+    cookies = {}
+
+    # Split by known cookie name patterns
+    parts = raw_cookie_str.split(/,\s*(?=#{cookie_names.join('|')})/i)
+
+    parts.each do |part|
+      # Get just name=value (before first semicolon)
+      main = part.split(";").first.strip
+      if main.include?("=")
+        name, value = main.split("=", 2)
+        # Skip cookies being cleared (empty or expired)
+        next if value.nil? || value.empty?
+        cookies[name] = value
       end
     end
-    cookies.join("; ")
+
+    cookies.map { |k, v| "#{k}=#{v}" }.join("; ")
   end
 
   def fetch_apps_listing(gck, cookies)
@@ -109,12 +120,7 @@ class FetchAppsJob < ApplicationJob
     response = HTTParty.post(
       APP_API_URL,
       body: URI.encode_www_form(body),
-      headers: {
-        "X-Usertoken" => gck,
-        "Cookie" => cookies,
-        "Accept" => "application/json",
-        "Content-Type" => "application/x-www-form-urlencoded"
-      }.merge(user_agent_headers),
+      headers: api_headers(gck, cookies),
       timeout: 60
     )
 
@@ -139,12 +145,7 @@ class FetchAppsJob < ApplicationJob
     response = HTTParty.post(
       APP_API_URL,
       body: URI.encode_www_form(body),
-      headers: {
-        "X-Usertoken" => gck,
-        "Cookie" => cookies,
-        "Accept" => "application/json",
-        "Content-Type" => "application/x-www-form-urlencoded"
-      }.merge(user_agent_headers),
+      headers: api_headers(gck, cookies),
       timeout: 30
     )
 
@@ -154,6 +155,16 @@ class FetchAppsJob < ApplicationJob
     data["result"]
   rescue JSON::ParserError
     nil
+  end
+
+  # Match the original JS implementation headers exactly
+  def api_headers(gck, cookies)
+    {
+      "X-Usertoken" => gck,
+      "cookie" => cookies,  # lowercase like JS
+      "Accept" => "application/json, text/plain, */*",
+      "content-type" => "application/x-www-form-urlencoded"
+    }
   end
 
   def save_app(app_data)
@@ -192,6 +203,7 @@ class FetchAppsJob < ApplicationJob
       app_type: app_data["application_type_label"],
       app_sub_type: app_data["application_sub_type_label"],
       source_app_id: app_data["source_app_id"],
+      listing_id: app_data["listing_id"],
       display_price: display_price
     }
 

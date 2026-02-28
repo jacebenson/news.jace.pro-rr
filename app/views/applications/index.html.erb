@@ -7,41 +7,83 @@
       <p class="text-gray-600"><%= @apps.total_count %> applications</p>
     </div>
 
-    <form class="flex gap-2" onsubmit="return handleAppSearch(event)">
-      <input type="text" id="app-search-input" value="<%= @search %>" placeholder="Search apps..."
-          class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm">
-      <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer">Search</button>
-      <% if @search.present? || @company.present? %>
+    <%= form_with url: applications_path, method: :get, class: "flex flex-wrap gap-2 items-center", local: true do |f| %>
+      <%= f.text_field :search, value: @search, placeholder: "Search apps...",
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm w-48" %>
+      <%= f.text_field :company, value: @company, placeholder: "Company...",
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm w-40" %>
+      <%= f.select :app_type, options_for_select(ServicenowStoreApp.distinct.pluck(:app_type).compact.sort, @app_type),
+          { include_blank: "All Types" },
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
+      <%= f.select :price, options_for_select([['All Prices', ''], ['Free', 'free'], ['Paid', 'paid']], @price),
+          {}, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
+      <%= f.select :sort, options_for_select([
+        ['Most Popular', 'popular'],
+        ['Most Installs', 'installs'],
+        ['Title A-Z', 'title'],
+        ['Company A-Z', 'company'],
+        ['Newest Published', 'published'],
+        ['Recently Updated', 'updated'],
+        ['Most Reviews', 'reviews'],
+        ['Most Tables', 'tables']
+      ], @sort), {}, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
+      <%= f.select :direction, options_for_select([['Desc', 'desc'], ['Asc', 'asc']], @direction),
+          {}, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm w-20" %>
+      <%= f.submit "Filter", class: "rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
+      <% if params.values_at(:search, :company, :app_type, :price, :trial, :no_license, :dev_instance, :prod_instance, :min_reviews, :published_within).any?(&:present?) || params[:sort].present? %>
         <%= link_to "Clear", applications_path, class: "rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 text-sm hover:bg-gray-50" %>
       <% end %>
-    </form>
-    <script>
-      function handleAppSearch(e) {
-        e.preventDefault();
-        const search = document.getElementById('app-search-input').value.trim();
-        if (search) {
-          window.location.href = '/a/search/' + encodeURIComponent(search);
-        } else {
-          window.location.href = '/a';
-        }
-        return false;
-      }
-    </script>
+    <% end %>
   </div>
 
-  <% if @search.present? || @company.present? %>
-    <div class="mb-4">
-      <p class="text-sm text-gray-600">
-        <% if @search.present? %>
-          Showing results for "<%= @search %>"
-        <% end %>
-        <% if @company.present? %>
-          by company "<%= @company %>"
-        <% end %>
-        <%= link_to "Clear", applications_path, class: "text-blue-600 hover:underline ml-2" %>
-      </p>
-    </div>
-  <% end %>
+  <!-- Filter Panel -->
+  <div class="mb-6 bg-gray-50 rounded-lg p-4 border">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Additional Filters</h3>
+    <%= form_with url: applications_path, method: :get, class: "flex flex-wrap gap-4 items-end", local: true do |f| %>
+      <!-- Preserve existing params -->
+      <%= f.hidden_field :search, value: @search %>
+      <%= f.hidden_field :company, value: @company %>
+      <%= f.hidden_field :app_type, value: @app_type %>
+      <%= f.hidden_field :price, value: @price %>
+      <%= f.hidden_field :sort, value: @sort %>
+      <%= f.hidden_field :direction, value: @direction %>
+
+      <label class="flex items-center gap-2 cursor-pointer">
+        <%= f.check_box :trial, { checked: @trial, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, '1', nil %>
+        <span class="text-sm text-gray-700">Trial Available</span>
+      </label>
+
+      <label class="flex items-center gap-2 cursor-pointer">
+        <%= f.check_box :no_license, { checked: @no_license, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, '1', nil %>
+        <span class="text-sm text-gray-700">No License Required</span>
+      </label>
+
+      <label class="flex items-center gap-2 cursor-pointer">
+        <%= f.check_box :dev_instance, { checked: @dev_instance, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, '1', nil %>
+        <span class="text-sm text-gray-700">Works on Dev Instance</span>
+      </label>
+
+      <label class="flex items-center gap-2 cursor-pointer">
+        <%= f.check_box :prod_instance, { checked: @prod_instance, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, '1', nil %>
+        <span class="text-sm text-gray-700">Works on Prod Instance</span>
+      </label>
+
+      <div class="flex items-center gap-2">
+        <%= f.label :min_reviews, "Min Reviews:", class: "text-sm text-gray-700" %>
+        <%= f.number_field :min_reviews, value: @min_reviews, min: 0, placeholder: "0",
+            class: "w-20 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-2 py-1 border text-sm" %>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <%= f.label :published_within, "Published within:", class: "text-sm text-gray-700" %>
+        <%= f.select :published_within,
+            options_for_select([['All Time', ''], ['30 days', 30], ['90 days', 90], ['180 days', 180]], @published_within),
+            {}, class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-2 py-1 border text-sm" %>
+      </div>
+
+      <%= f.submit "Apply", class: "rounded-md bg-blue-600 px-4 py-1.5 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
+    <% end %>
+  </div>
 
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
     <% @apps.each do |app| %>
@@ -104,6 +146,6 @@
   <% end %>
 
   <div class="mt-6">
-    <%= paginate @apps %>
+    <%= paginate @apps, params: request.query_parameters %>
   </div>
 </div>
