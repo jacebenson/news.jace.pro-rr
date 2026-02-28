@@ -6,7 +6,7 @@ class FetchSecFilingsJob < ApplicationJob
 
   # SEC requires a User-Agent header with contact info
   SEC_HEADERS = {
-    "User-Agent" => "NewsBot (contact@example.com)",
+    "User-Agent" => "NewsBot/1.0 (jace@jace.pro)",
     "Accept" => "application/json"
   }.freeze
 
@@ -175,15 +175,34 @@ class FetchSecFilingsJob < ApplicationJob
   end
 
   def fetch_filing_content(filing, cik_padded)
-    # Get the index.json to find the .txt file
+    # Rate limit - SEC asks for max 10 requests per second
+    sleep(0.15)
+
+    # Try JSON index first (modern filings)
+    content = fetch_from_json_index(filing, cik_padded)
+    return content if content.present?
+
+    # Fall back to HTML index (older filings)
+    fetch_from_html_index(filing, cik_padded)
+  end
+
+  def fetch_from_json_index(filing, cik_padded)
+    Rails.logger.info "[SEC] Trying JSON index: #{filing[:json_link]}"
     response = HTTParty.get(filing[:json_link], headers: SEC_HEADERS, timeout: 30)
-    return nil unless response.success?
+
+    unless response.success?
+      Rails.logger.info "[SEC] JSON index not found: HTTP #{response.code}"
+      return nil
+    end
+
+    # Check content type
+    content_type = response.headers["Content-Type"]
 
     data = response.parsed_response
 
-    # Handle case where SEC returns string instead of hash
+    # Handle case where SEC returns string instead of hash (HTML error page)
     unless data.is_a?(Hash)
-      Rails.logger.error "[SEC] Expected JSON hash but got: #{data.class}"
+      Rails.logger.info "[SEC] JSON index returned non-JSON (likely older filing): #{data.class}"
       return nil
     end
 
@@ -197,6 +216,7 @@ class FetchSecFilingsJob < ApplicationJob
     file_url = "https://www.sec.gov/Archives/edgar/data/#{cik_padded}/#{accession_no_dashes}/#{txt_file['name']}"
 
     # Fetch the file content
+    sleep(0.15) # Rate limit
     response = HTTParty.get(file_url, headers: SEC_HEADERS, timeout: 60)
     return nil unless response.success?
 
@@ -208,7 +228,34 @@ class FetchSecFilingsJob < ApplicationJob
     # Convert HTML to markdown
     ReverseMarkdown.convert(document || "", unknown_tags: :bypass)
   rescue => e
-    Rails.logger.error "[SEC] Error fetching content: #{e.message}"
+    Rails.logger.error "[SEC] Error fetching from JSON: #{e.message}"
+    nil
+  end
+
+  def fetch_from_html_index(filing, cik_padded)
+    Rails.logger.info "[SEC] Trying HTML index: #{filing[:html_link]}"
+
+    # For older filings, try to construct the txt file URL directly
+    accession_no_dashes = filing[:accession_number].delete("-")
+    txt_url = "https://www.sec.gov/Archives/edgar/data/#{cik_padded}/#{accession_no_dashes}/#{filing[:accession_number]}.txt"
+
+    sleep(0.15) # Rate limit
+    response = HTTParty.get(txt_url, headers: SEC_HEADERS, timeout: 60)
+
+    unless response.success?
+      Rails.logger.info "[SEC] TXT file not found: HTTP #{response.code}"
+      return nil
+    end
+
+    # Extract the first document and convert to markdown
+    text = response.body
+    document = text.split("</DOCUMENT>").first
+    document = document.split("SECURITIES AND EXCHANGE COMMISSION").last if document.include?("SECURITIES AND EXCHANGE COMMISSION")
+
+    # Convert HTML to markdown
+    ReverseMarkdown.convert(document || "", unknown_tags: :bypass)
+  rescue => e
+    Rails.logger.error "[SEC] Error fetching from HTML: #{e.message}"
     nil
   end
 
