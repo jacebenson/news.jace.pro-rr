@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_28_201749) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_28_203939) do
   create_table "companies", force: :cascade do |t|
     t.string "name"
     t.text "alias", default: "[]"
@@ -223,6 +223,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_28_201749) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "listing_id"
+    t.string "featured_icon"
     t.index ["source_app_id"], name: "index_servicenow_store_apps_on_source_app_id", unique: true
   end
 

@@ -1,6 +1,6 @@
 module Admin
   class ServicenowStoreAppsController < BaseController
-    before_action :set_app, only: %i[show edit update destroy]
+    before_action :set_app, only: %i[show edit update destroy refresh]
 
     def index
       @apps = ServicenowStoreApp.all
@@ -46,6 +46,11 @@ module Admin
       redirect_to admin_store_apps_path, notice: "App deleted."
     end
 
+    def refresh
+      FetchAppsJob.perform_later(@app.id)
+      redirect_to edit_admin_store_app_path(@app), notice: "Refresh job started. Check back in a minute."
+    end
+
     private
 
     def set_app
@@ -54,7 +59,9 @@ module Admin
 
     def app_params
       params.require(:servicenow_store_app).permit(:title, :tagline, :store_description,
-                                                   :company_name, :logo, :app_type, :landing_page)
+                                                   :company_name, :logo, :app_type, :landing_page,
+                                                   :source_app_id, :listing_id, :purchase_count,
+                                                   :review_count, :display_price)
     end
   end
 end

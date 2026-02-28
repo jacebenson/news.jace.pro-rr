@@ -86,7 +86,11 @@ Rails.application.routes.draw do
     resources :news_feeds
     resources :news_items
     resources :knowledge_sessions
-    resources :store_apps, controller: "servicenow_store_apps"
+    resources :store_apps, controller: "servicenow_store_apps" do
+      member do
+        post :refresh
+      end
+    end
     resources :investments, controller: "servicenow_investments"
     get "background-jobs", to: "background_jobs#index", as: :background_jobs
     post "background-jobs/run", to: "background_jobs#run_job", as: :run_job

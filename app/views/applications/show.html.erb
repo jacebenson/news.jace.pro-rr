@@ -34,14 +34,24 @@
             <p class="mt-1 text-gray-700 text-sm"><%= @app.tagline %></p>
           <% end %>
         </div>
-        <% store_url = @app.landing_page.present? ? @app.landing_page : "https://store.servicenow.com/store/app/#{@app.listing_id || @app.source_app_id}" %>
-        <%= link_to store_url, target: "_blank", rel: "noopener",
-            class: "inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors text-sm whitespace-nowrap" do %>
-          View in Store
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        <% end %>
+        <div class="flex items-center gap-2">
+          <% if logged_in? && current_user.admin? %>
+            <%= link_to edit_admin_store_app_path(@app), class: "inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Edit
+            <% end %>
+          <% end %>
+          <% store_url = @app.landing_page.present? ? @app.landing_page : "https://store.servicenow.com/store/app/#{@app.listing_id || @app.source_app_id}" %>
+          <%= link_to store_url, target: "_blank", rel: "noopener",
+              class: "inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors text-sm whitespace-nowrap" do %>
+            View in Store
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>

@@ -4,7 +4,83 @@ class FetchAppsJob < ApplicationJob
   STORE_URL = "https://store.servicenow.com/sn_appstore_store.do"
   APP_API_URL = "https://store.servicenow.com/appStore.do"
 
-  def perform
+  # If app_id is provided, only fetch that one app
+  def perform(app_id = nil)
+    if app_id
+      fetch_single_app(app_id)
+    else
+      fetch_all_apps
+    end
+  end
+
+  private
+
+  def fetch_single_app(app_id)
+    Rails.logger.info "[APPS] Starting FetchAppsJob for single app: #{app_id}"
+
+    app = ServicenowStoreApp.find_by(id: app_id)
+    unless app
+      Rails.logger.error "[APPS] App not found: #{app_id}"
+      return
+    end
+
+    begin
+      # Get auth
+      response = HTTParty.get(STORE_URL, timeout: 30)
+      unless response.success?
+        Rails.logger.error "[APPS] Failed to fetch store page: #{response.code}"
+        return
+      end
+
+      gck = extract_gck(response.body)
+      unless gck
+        Rails.logger.error "[APPS] Could not extract g_ck token"
+        return
+      end
+
+      cookies = extract_cookies(response)
+      Rails.logger.info "[APPS] Got auth token and cookies"
+
+      # Fetch single app detail
+      app_detail = fetch_app_detail_by_id(app.source_app_id, gck, cookies)
+
+      if app_detail && save_app(app_detail)
+        Rails.logger.info "[APPS] Successfully updated: #{app_detail['title']}"
+      else
+        Rails.logger.error "[APPS] Failed to fetch or save app"
+      end
+
+    rescue StandardError => e
+      Rails.logger.error "[APPS] Fatal error: #{e.message}"
+    end
+  end
+
+  def fetch_app_detail_by_id(source_app_id, gck, cookies)
+    body = {
+      sysparm_data: {
+        action: "store.Application.GetById",
+        application_id: source_app_id,
+        version: "",
+        isUpcomingIntegration: false
+      }.to_json
+    }
+
+    response = HTTParty.post(
+      APP_API_URL,
+      body: URI.encode_www_form(body),
+      headers: api_headers(gck, cookies),
+      timeout: 30
+    )
+
+    return nil unless response.success?
+
+    data = JSON.parse(response.body)
+    data["result"]
+  rescue JSON::ParserError
+    nil
+  end
+
+  def fetch_all_apps
     Rails.logger.info "[APPS] Starting FetchAppsJob"
     job_start = Time.current
 
@@ -190,7 +266,8 @@ class FetchAppsJob < ApplicationJob
       system_requirements: html_to_markdown(app_data["system_requirements"]),
       store_description: html_to_markdown(app_data["store_description"]),
       title: app_data["title"],
-      logo: app_data["logo"],
+      logo: app_data["featured_icon"].present? ? "https://store.servicenow.com/#{app_data["featured_icon"]}" : app_data["logo"],
+      featured_icon: app_data["featured_icon"],
       tagline: app_data["tagline"],
       purchase_count: app_data["purchaseCount"].to_i,
       review_count: app_data["total_reviews"].to_i,
