@@ -1,0 +1,103 @@
+<% content_for :title, "Duplicate Participants - Admin" %>
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Potential Duplicate Participants</h1>
+  <p class="text-gray-600 mt-2">
+    These participants have similar normalized names and may be duplicates.
+    Click "Merge" to combine them.
+  </p>
+</div>
+
+<% if @duplicate_groups.empty? %>
+  <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+    <p class="text-green-800">No potential duplicates found! 🎉</p>
+  </div>
+<% else %>
+  <div class="space-y-6">
+    <% @duplicate_groups.each do |normalized_name, participants| %>
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-gray-50 px-6 py-3 border-b border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900">
+            "<%= normalized_name.titleize %>"
+            <span class="text-sm font-normal text-gray-500">(<%= participants.size %> variants)</span>
+          </h2>
+        </div>
+        
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Records</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% participants.each_with_index do |participant, index| %>
+              <% counts = participant.related_counts %>
+              <tr class="<%= index == 0 ? 'bg-green-50/30' : '' %>">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <% if participant.image_url.present? %>
+                      <img src="<%= participant.image_url %>" class="h-8 w-8 rounded-full object-cover">
+                    <% else %>
+                      <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-500">
+                        <%= participant.name&.first || "?" %>
+                      </div>
+                    <% end %>
+                    <div>
+                      <span class="text-sm font-medium text-gray-900"><%= participant.name %></span>
+                      <% if participant[:alias].present? %>
+                        <% aliases = JSON.parse(participant[:alias]) rescue [] %>
+                        <% if aliases.any? %>
+                          <div class="text-xs text-gray-500">Also: <%= aliases.join(", ") %></div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= truncate(participant.title, length: 40) %></td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                  <%= participant.company&.name || participant.company_name || "—" %>
+                </td>
+                <td class="px-6 py-4 text-sm text-center">
+                  <div class="flex justify-center gap-2 text-xs">
+                    <% if counts[:mvp_awards] > 0 %>
+                      <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded" title="MVP Awards"><%= counts[:mvp_awards] %> 🏆</span>
+                    <% end %>
+                    <% if counts[:news_items] > 0 %>
+                      <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded" title="News Items"><%= counts[:news_items] %> 📰</span>
+                    <% end %>
+                    <% if counts[:knowledge_sessions] > 0 %>
+                      <span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded" title="Sessions"><%= counts[:knowledge_sessions] %> 🎤</span>
+                    <% end %>
+                    <% if counts[:snapp_cards] > 0 %>
+                      <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded" title="Snapp Cards"><%= counts[:snapp_cards] %> 🃏</span>
+                    <% end %>
+                    <% if counts[:startup_founders] > 0 %>
+                      <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded" title="Founder Records"><%= counts[:startup_founders] %> 🚀</span>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                  <%= link_to "View", admin_participant_path(participant), class: "text-gray-600 hover:text-gray-900" %>
+                  <%= link_to "Edit", edit_admin_participant_path(participant), class: "text-blue-600 hover:text-blue-900" %>
+                  <% if index > 0 %>
+                    <%= link_to "Merge into first ↑", 
+                        merge_admin_participant_path(participant, target_id: participants.first.id), 
+                        class: "text-orange-600 hover:text-orange-800 font-medium" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="mt-6">
+  <%= link_to "← Back to Participants", admin_participants_path, class: "text-gray-600 hover:text-gray-900" %>
+</div>

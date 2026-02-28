@@ -47,6 +47,7 @@ Rails.application.routes.draw do
   # API endpoints
   namespace :api do
     get "companies/search", to: "companies#search"
+    get "participants/search", to: "participants#search"
   end
 
   # Knowledge Sessions - all events
@@ -70,10 +71,16 @@ Rails.application.routes.draw do
     resources :users
     resources :companies
     resources :participants do
+      collection do
+        get :duplicates
+      end
       member do
         post :link_company
+        get :merge
+        get "compare/:target_id", to: "participants#compare", as: :compare
+        post :merge, to: "participants#execute_merge", as: :execute_merge
       end
-      resources :mvp_awards, only: [ :new, :create, :destroy ]
+      resources :mvp_awards, only: [ :new, :create, :edit, :update, :destroy ]
       resources :startup_founders, only: [ :new, :create, :destroy ]
     end
     resources :news_feeds

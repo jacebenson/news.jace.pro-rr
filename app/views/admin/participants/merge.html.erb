@@ -1,0 +1,142 @@
+<% content_for :title, "Merge Participant - Admin" %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Merge Participant</h1>
+    <p class="text-gray-600 mt-2">
+      Merge <strong><%= @participant.name %></strong> into another participant.
+      The source participant will be deleted and all their data transferred.
+    </p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Step 1: Select Target Participant</h2>
+    
+    <%= form_with url: merge_admin_participant_path(@participant), method: :get, class: "space-y-4", local: true do |f| %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Search for participant to merge into</label>
+        <div class="relative">
+          <input type="text" 
+                 id="participant-search" 
+                 placeholder="Type to search participants..." 
+                 autocomplete="off"
+                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                 value="<%= @target&.name %>">
+          <%= f.hidden_field :target_id, id: "target-id-input", value: @target&.id %>
+          <div id="participant-results" class="hidden absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"></div>
+        </div>
+        <p class="mt-1 text-sm text-gray-500">Type at least 2 characters to search</p>
+      </div>
+
+      <% if @target %>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="flex items-center gap-3">
+            <% if @target.image_url.present? %>
+              <img src="<%= @target.image_url %>" class="h-12 w-12 rounded-full object-cover">
+            <% else %>
+              <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-lg font-medium text-blue-600">
+                <%= @target.name.first %>
+              </div>
+            <% end %>
+            <div>
+              <p class="font-medium text-gray-900"><%= @target.name %></p>
+              <p class="text-sm text-gray-600"><%= @target.title.presence || "No title" %></p>
+              <% if @target.company.present? %>
+                <p class="text-sm text-blue-600"><%= @target.company.name %></p>
+              <% elsif @target.company_name.present? %>
+                <p class="text-sm text-gray-500"><%= @target.company_name %></p>
+              <% end %>
+            </div>
+          </div>
+          
+          <div class="mt-4 flex gap-2">
+            <%= link_to "Compare & Continue →", 
+                compare_admin_participant_path(@participant, @target), 
+                class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
+            <%= link_to "Clear", merge_admin_participant_path(@participant), class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+    <h3 class="font-medium text-yellow-800 mb-2">⚠️ What will happen:</h3>
+    <ul class="text-sm text-yellow-700 space-y-1 list-disc list-inside">
+      <li><strong><%= @participant.name %></strong> (source) will be <strong>deleted</strong></li>
+      <li>All related records (awards, sessions, news items) will transfer to the target</li>
+      <li>The source name will be added as an alias for future reference</li>
+      <li>You will choose which fields (name, title, bio, etc.) to keep in the next step</li>
+    </ul>
+  </div>
+
+  <div class="mt-6">
+    <%= link_to "← Back to Participants", admin_participants_path, class: "text-gray-600 hover:text-gray-900" %>
+  </div>
+</div>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('participant-search');
+  const resultsDiv = document.getElementById('participant-results');
+  const targetIdInput = document.getElementById('target-id-input');
+  let debounceTimer;
+  
+  searchInput.addEventListener('input', function() {
+    const query = this.value.trim();
+    targetIdInput.value = '';
+    
+    clearTimeout(debounceTimer);
+    if (query.length < 2) {
+      resultsDiv.classList.add('hidden');
+      return;
+    }
+    
+    debounceTimer = setTimeout(() => {
+      fetch(`/api/participants/search?q=${encodeURIComponent(query)}&exclude=<%= @participant.id %>`)
+        .then(r => r.json())
+        .then(participants => {
+          if (participants.length === 0) {
+            resultsDiv.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No matches found</div>';
+          } else {
+            resultsDiv.innerHTML = participants.map(p => 
+              `<div class="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0" data-id="${p.id}" data-name="${p.name}">
+                <div class="font-medium">${p.name}</div>
+                <div class="text-xs text-gray-500">${p.title || 'No title'}${p.company ? ' • ' + p.company : ''}</div>
+              </div>`
+            ).join('');
+          }
+          resultsDiv.classList.remove('hidden');
+        })
+        .catch(err => {
+          console.error('Search failed:', err);
+          resultsDiv.innerHTML = '<div class="px-3 py-2 text-sm text-red-500">Search failed</div>';
+          resultsDiv.classList.remove('hidden');
+        });
+    }, 200);
+  });
+  
+  resultsDiv.addEventListener('click', function(e) {
+    const item = e.target.closest('[data-id]');
+    if (item) {
+      searchInput.value = item.dataset.name;
+      targetIdInput.value = item.dataset.id;
+      resultsDiv.classList.add('hidden');
+      // Submit the form to show the target selection
+      searchInput.closest('form').submit();
+    }
+  });
+  
+  document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+      resultsDiv.classList.add('hidden');
+    }
+  });
+  
+  searchInput.addEventListener('focus', function() {
+    if (resultsDiv.innerHTML && this.value.length >= 2) {
+      resultsDiv.classList.remove('hidden');
+    }
+  });
+})();
+</script>

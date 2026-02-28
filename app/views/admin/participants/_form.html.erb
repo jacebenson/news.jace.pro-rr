@@ -117,10 +117,13 @@
                   <% end %>
                 <% end %>
               </div>
-              <%= link_to "Remove", admin_participant_mvp_award_path(participant, award), 
-                  method: :delete, 
-                  data: { confirm: "Are you sure?" },
-                  class: "text-red-600 hover:text-red-800 text-sm" %>
+              <div class="flex items-center gap-3">
+                <%= link_to "Edit", edit_admin_participant_mvp_award_path(participant, award), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+                <%= link_to "Remove", admin_participant_mvp_award_path(participant, award),
+                    method: :delete,
+                    data: { confirm: "Are you sure?" },
+                    class: "text-red-600 hover:text-red-800 text-sm" %>
+              </div>
             </div>
           <% end %>
         </div>
@@ -132,6 +135,40 @@
         </svg>
         Add MVP Award
       <% end %>
+
+      <details class="mt-4 bg-gray-50 rounded-md border border-gray-200">
+        <summary class="px-3 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 rounded-md">
+          Common MVP Sources (Historical)
+        </summary>
+        <div class="px-3 py-2 text-sm max-h-64 overflow-y-auto">
+          <table class="w-full text-xs">
+            <thead class="text-gray-500 border-b">
+              <tr>
+                <th class="text-left py-1">Year</th>
+                <th class="text-left py-1">Award</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr><td class="py-1">2026</td><td><a href="https://www.servicenow.com/community/in-other-news/announcing-our-2026-servicenow-mvps/ba-p/3493833" target="_blank" class="text-blue-600 hover:underline">Most Valued Professionals</a></td></tr>
+              <tr><td class="py-1">2025</td><td><a href="https://www.servicenow.com/community/in-other-news/announcing-our-2025-servicenow-mvps/ba-p/3177209" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2024</td><td><a href="https://www.servicenow.com/community/in-other-news/announcing-our-2024-servicenow-mvp-and-rising-star-awardees/ba-p/2812367/page/6" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2023</td><td><a href="https://www.servicenow.com/community/in-other-news/announcing-our-2023-mvp-and-rising-star-awardees/ba-p/2457267" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2023</td><td><a href="https://developer.servicenow.com/blog.do?p=/post/2023-mvp-announcement/" target="_blank" class="text-blue-600 hover:underline">Developer MVP</a></td></tr>
+              <tr><td class="py-1">2022</td><td><a href="https://www.servicenow.com/community/in-other-news/announcing-our-2022-mvp-and-rising-stars/ba-p/2270403" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2022</td><td><a href="https://developer.servicenow.com/blog.do?p=/post/2022-mvp-announcement/" target="_blank" class="text-blue-600 hover:underline">Developer MVP</a></td></tr>
+              <tr><td class="py-1">2021</td><td><a href="https://www.servicenow.com/community/top-contributor-blog/congratulations-2021-now-community-mvp-awardees/ba-p/2288544" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2021</td><td><a href="https://developer.servicenow.com/blog.do?p=/post/2021-developer-mvp-announcement/" target="_blank" class="text-blue-600 hover:underline">Developer MVP</a></td></tr>
+              <tr><td class="py-1">2020</td><td><a href="https://www.servicenow.com/community/top-contributor-blog/congratulations-2020-now-community-mvp-awardees/ba-p/2288069" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2020</td><td><a href="https://developer.servicenow.com/blog.do?p=/post/all-stars/" target="_blank" class="text-blue-600 hover:underline">Developer MVP</a></td></tr>
+              <tr><td class="py-1">2019</td><td><a href="https://www.servicenow.com/community/top-contributor-blog/congratulations-2019-mvp-leader-awardees/ba-p/2287883" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2018</td><td><a href="https://www.servicenow.com/community/top-contributor-blog/congratulations-2018-mvp-leader-awardees/ba-p/2288718" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2016</td><td><span class="text-gray-400">Lost to Time</span></td></tr>
+              <tr><td class="py-1">2015</td><td><a href="https://www.servicenow.com/community/top-contributor-blog/new-top-contributor-programs/ba-p/2288420" target="_blank" class="text-blue-600 hover:underline">Top Contributor Program</a></td></tr>
+              <tr><td class="py-1">2013</td><td><a href="https://www.servicenow.com/community/developer-articles/from-the-archives-2013-member-of-the-month/ta-p/2306880" target="_blank" class="text-blue-600 hover:underline">Member of the Month</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
 
     <%# Startup Founder Section %>
@@ -179,6 +216,9 @@
     <div class="flex gap-4 pt-4">
       <%= f.submit class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer" %>
       <%= link_to "Cancel", admin_participants_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+      <% if participant.persisted? %>
+        <%= link_to "Merge into...", merge_admin_participant_path(participant), class: "px-4 py-2 text-orange-600 hover:text-orange-800" %>
+      <% end %>
     </div>
   </div>
 <% end %>

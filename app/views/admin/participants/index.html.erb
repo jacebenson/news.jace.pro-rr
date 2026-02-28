@@ -72,6 +72,13 @@
           <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
             <%= link_to "View", admin_participant_path(participant), class: "text-gray-600 hover:text-gray-900" %>
             <%= link_to "Edit", edit_admin_participant_path(participant), class: "text-blue-600 hover:text-blue-900" %>
+            <%= link_to "Merge", merge_admin_participant_path(participant), class: "text-orange-600 hover:text-orange-800" %>
+            <%= link_to who_path(name: participant.slug), target: "_blank", class: "text-green-600 hover:text-green-800 inline-flex items-center gap-1" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+              Public
+            <% end %>
           </td>
         </tr>
       <% end %>

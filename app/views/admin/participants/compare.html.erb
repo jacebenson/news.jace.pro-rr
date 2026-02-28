@@ -1,0 +1,281 @@
+<% content_for :title, "Compare & Merge - Admin" %>
+
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Compare & Merge</h1>
+    <p class="text-gray-600 mt-2">
+      Choose which fields to keep from each participant.
+      <strong><%= @participant.name %></strong> will be merged into <strong><%= @target.name %></strong>.
+    </p>
+  </div>
+
+  <%= form_with url: execute_merge_admin_participant_path(@participant), method: :post, class: "space-y-6", local: true do |f| %>
+    <%= f.hidden_field :target_id, value: @target.id %>
+
+    <%# Field comparison table %>
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Field</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-red-50">
+              <div class="flex items-center gap-2">
+                <input type="radio" name="select_all" value="source" class="cursor-pointer" onclick="selectAllFields('source')">
+                <span>Source (<%= @participant.name %>)</span>
+                <span class="text-xs font-normal text-red-600">— will be deleted</span>
+              </div>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase bg-green-50">
+              <div class="flex items-center gap-2">
+                <input type="radio" name="select_all" value="target" class="cursor-pointer" onclick="selectAllFields('target')">
+                <span>Target (<%= @target.name %>)</span>
+                <span class="text-xs font-normal text-green-600">— will be kept</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <%# Name %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">Name</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[name]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm">
+                  <div class="text-gray-900 font-medium"><%= @participant.name.presence || "—" %></div>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[name]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" checked>
+                <div class="text-sm">
+                  <div class="text-gray-900 font-medium"><%= @target.name.presence || "—" %></div>
+                </div>
+              </label>
+            </td>
+          </tr>
+
+          <%# Title %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">Title</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[title]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm">
+                  <div class="text-gray-900"><%= @participant.title.presence || "—" %></div>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[title]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" <%= @target.title.present? ? 'checked' : (@participant.title.present? ? '' : 'checked') %>>
+                <div class="text-sm">
+                  <div class="text-gray-900"><%= @target.title.presence || "—" %></div>
+                </div>
+              </label>
+            </td>
+          </tr>
+
+          <%# Company %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">Company</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[company_id]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm">
+                  <div class="text-gray-900"><%= @participant.company&.name || @participant.company_name.presence || "—" %></div>
+                  <% if @participant.company.present? %>
+                    <div class="text-xs text-green-600">✓ Linked to company record</div>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[company_id]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" <%= @target.company.present? || @target.company_name.present? ? 'checked' : (@participant.company.present? || @participant.company_name.present? ? '' : 'checked') %>>
+                <div class="text-sm">
+                  <div class="text-gray-900"><%= @target.company&.name || @target.company_name.presence || "—" %></div>
+                  <% if @target.company.present? %>
+                    <div class="text-xs text-green-600">✓ Linked to company record</div>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+          </tr>
+
+          <%# Bio %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">Bio</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[bio]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm text-gray-900 max-h-32 overflow-y-auto">
+                  <%= simple_format(@participant.bio.presence || "—") %>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[bio]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" <%= @target.bio.present? ? 'checked' : (@participant.bio.present? ? '' : 'checked') %>>
+                <div class="text-sm text-gray-900 max-h-32 overflow-y-auto">
+                  <%= simple_format(@target.bio.presence || "—") %>
+                </div>
+              </label>
+            </td>
+          </tr>
+
+          <%# Image URL %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">Image</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[image_url]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm">
+                  <% if @participant.image_url.present? %>
+                    <img src="<%= @participant.image_url %>" class="h-16 w-16 rounded object-cover">
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[image_url]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" <%= @target.image_url.present? ? 'checked' : (@participant.image_url.present? ? '' : 'checked') %>>
+                <div class="text-sm">
+                  <% if @target.image_url.present? %>
+                    <img src="<%= @target.image_url %>" class="h-16 w-16 rounded object-cover">
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+          </tr>
+
+          <%# LinkedIn URL %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">LinkedIn</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[linkedin_url]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm break-all">
+                  <% if @participant.linkedin_url.present? %>
+                    <%= link_to @participant.linkedin_url, @participant.linkedin_url, target: "_blank", class: "text-blue-600 hover:underline" %>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[linkedin_url]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" <%= @target.linkedin_url.present? ? 'checked' : (@participant.linkedin_url.present? ? '' : 'checked') %>>
+                <div class="text-sm break-all">
+                  <% if @target.linkedin_url.present? %>
+                    <%= link_to @target.linkedin_url, @target.linkedin_url, target: "_blank", class: "text-blue-600 hover:underline" %>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+          </tr>
+
+          <%# User association %>
+          <tr>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900">Linked User</td>
+            <td class="px-6 py-4 bg-red-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[user_id]" value="source" class="mt-1 cursor-pointer field-radio" data-field="source">
+                <div class="text-sm">
+                  <% if @participant.user.present? %>
+                    <div class="text-gray-900"><%= @participant.user.email %></div>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+            <td class="px-6 py-4 bg-green-50/30">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="radio" name="fields[user_id]" value="target" class="mt-1 cursor-pointer field-radio" data-field="target" checked>
+                <div class="text-sm">
+                  <% if @target.user.present? %>
+                    <div class="text-gray-900"><%= @target.user.email %></div>
+                    <div class="text-xs text-green-600">✓ Target's user kept by default</div>
+                  <% else %>
+                    <span class="text-gray-400">—</span>
+                    <% if @participant.user.present? %>
+                      <div class="text-xs text-yellow-600">⚠ Target has no user, source's will be used</div>
+                    <% end %>
+                  <% end %>
+                </div>
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Related records summary %>
+    <div class="bg-gray-50 rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Related Records (will all transfer to target)</h3>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-white rounded p-3 text-center">
+          <div class="text-2xl font-bold text-blue-600"><%= @source_counts[:news_items] %></div>
+          <div class="text-xs text-gray-600">News Items</div>
+        </div>
+        <div class="bg-white rounded p-3 text-center">
+          <div class="text-2xl font-bold text-purple-600"><%= @source_counts[:knowledge_sessions] %></div>
+          <div class="text-xs text-gray-600">Sessions</div>
+        </div>
+        <div class="bg-white rounded p-3 text-center">
+          <div class="text-2xl font-bold text-yellow-600"><%= @source_counts[:mvp_awards] %></div>
+          <div class="text-xs text-gray-600">MVP Awards</div>
+        </div>
+        <div class="bg-white rounded p-3 text-center">
+          <div class="text-2xl font-bold text-green-600"><%= @source_counts[:snapp_cards] %></div>
+          <div class="text-xs text-gray-600">Snapp Cards</div>
+        </div>
+        <div class="bg-white rounded p-3 text-center">
+          <div class="text-2xl font-bold text-red-600"><%= @source_counts[:startup_founders] %></div>
+          <div class="text-xs text-gray-600">Founder Records</div>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 mt-4">
+        Target currently has: 
+        <%= @target_counts[:news_items] %> news items, 
+        <%= @target_counts[:knowledge_sessions] %> sessions, 
+        <%= @target_counts[:mvp_awards] %> awards, 
+        <%= @target_counts[:snapp_cards] %> cards, 
+        <%= @target_counts[:startup_founders] %> founder records.
+        <br>
+        <span class="text-yellow-700">Duplicates will be skipped automatically.</span>
+      </p>
+    </div>
+
+    <%# Action buttons %>
+    <div class="flex items-center justify-between pt-4">
+      <%= link_to "← Back", merge_admin_participant_path(@participant), class: "text-gray-600 hover:text-gray-900" %>
+      
+      <div class="flex gap-4 items-center">
+        <div class="text-sm text-gray-600">
+          Merging <strong><%= @participant.name %></strong> → <strong><%= @target.name %></strong>
+        </div>
+        <%= f.submit "Execute Merge", 
+            class: "bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 cursor-pointer font-medium",
+            data: { confirm: "This will permanently delete '#{@participant.name}' and merge all data into '#{@target.name}'. Are you sure?" } %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+function selectAllFields(source) {
+  document.querySelectorAll('.field-radio[data-field="' + source + '"]').forEach(radio => {
+    radio.checked = true;
+  });
+}
+</script>

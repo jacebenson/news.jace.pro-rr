@@ -1,6 +1,6 @@
 module Admin
   class ParticipantsController < BaseController
-    before_action :set_participant, only: %i[show edit update destroy]
+    before_action :set_participant, only: %i[show edit update destroy merge compare]
 
     def index
       @participants = Participant.includes(:company)
@@ -55,6 +55,65 @@ module Admin
     def destroy
       @participant.destroy
       redirect_to admin_participants_path, notice: "Participant deleted."
+    end
+
+    # GET /admin/participants/:id/merge
+    # Step 1: Select target participant to merge into
+    def merge
+      @target = nil
+      if params[:target_id].present?
+        @target = Participant.find_by(id: params[:target_id])
+        if @target.nil?
+          flash.now[:alert] = "Target participant not found."
+        elsif @target.id == @participant.id
+          flash.now[:alert] = "Cannot merge a participant into itself."
+          @target = nil
+        end
+      end
+    end
+
+    # GET /admin/participants/:id/compare/:target_id
+    # Step 2: Compare and choose which fields to keep
+    def compare
+      @target = Participant.find(params[:target_id])
+
+      if @target.id == @participant.id
+        redirect_to merge_admin_participant_path(@participant), alert: "Cannot compare a participant with itself."
+        return
+      end
+
+      @source_counts = @participant.related_counts
+      @target_counts = @target.related_counts
+    end
+
+    # POST /admin/participants/:id/merge
+    # Execute the merge with field choices
+    def execute_merge
+      @participant = Participant.find(params[:id])
+      @target = Participant.find(params[:target_id])
+
+      if @target.id == @participant.id
+        redirect_to merge_admin_participant_path(@participant), alert: "Cannot merge a participant into itself."
+        return
+      end
+
+      # Collect field choices from params
+      field_choices = params[:fields] || {}
+
+      begin
+        source_name = @participant.name
+        target_name = @target.name
+        @target.merge!(@participant, field_choices)
+        redirect_to admin_participant_path(@target), notice: "Successfully merged '#{source_name}' into '#{target_name}'."
+      rescue => e
+        redirect_to compare_admin_participant_path(@participant, @target), alert: "Merge failed: #{e.message}"
+      end
+    end
+
+    # GET /admin/participants/duplicates
+    # Show all potential duplicates for manual review
+    def duplicates
+      @duplicate_groups = Participant.find_potential_duplicates
     end
 
     private
