@@ -8,6 +8,10 @@ class Participant < ApplicationRecord
   has_many :knowledge_session_participants, dependent: :destroy
   has_many :knowledge_sessions, through: :knowledge_session_participants
 
+  has_many :mvp_awards, dependent: :destroy
+  has_many :snapp_cards, dependent: :destroy
+  has_many :startup_founders, dependent: :destroy
+
   validates :name, presence: true, uniqueness: true
 
   def slug
@@ -30,5 +34,43 @@ class Participant < ApplicationRecord
     # Search using SQL - compare normalized versions
     # This avoids loading all records into memory
     where("LOWER(REPLACE(REPLACE(REPLACE(name, ' ', ''), '-', ''), '_', '')) = ?", normalized_slug).first
+  end
+
+  # Scopes for filtering participants with specific data
+  scope :with_mvp_awards, -> { joins(:mvp_awards).distinct }
+  scope :with_snapp_cards, -> { joins(:snapp_cards).distinct }
+  scope :with_startup_founders, -> { joins(:startup_founders).distinct }
+
+  # Helper methods to check if participant has specific data
+  def has_mvp_awards?
+    mvp_awards.exists?
+  end
+
+  def has_snapp_cards?
+    snapp_cards.exists?
+  end
+
+  def is_startup_founder?
+    startup_founders.exists?
+  end
+
+  # Get all MVP award years
+  def mvp_years
+    mvp_awards.pluck(:year).uniq.sort.reverse
+  end
+
+  # Get MVP awards grouped by year
+  def mvp_awards_by_year
+    mvp_awards.recent_first.group_by(&:year)
+  end
+
+  # Count of MVP awards
+  def mvp_award_count
+    mvp_awards.count
+  end
+
+  # Get unique award types
+  def mvp_award_types
+    mvp_awards.pluck(:award_type).uniq
   end
 end

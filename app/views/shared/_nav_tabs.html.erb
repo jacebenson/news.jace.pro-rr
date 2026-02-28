@@ -22,6 +22,28 @@
       </div>
     </li>
 
+    <li class="z-30 flex-auto text-center relative" data-controller="dropdown">
+      <button type="button" data-action="click->dropdown#toggle"
+              class="rounded-md bg-slate-100 px-2 py-1 text-sm text-slate-600 transition-all ease-in-out w-full hover:bg-slate-200">
+        MVPs
+      </button>
+      <div data-dropdown-target="menu" class="hidden absolute top-full left-0 mt-1 bg-white shadow-lg rounded-md border border-slate-200 z-50 min-w-full">
+        <%= link_to "All MVPs", mvps_path, class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-t-md" %>
+        <%= link_to "2026", mvps_path(year: 2026), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2025", mvps_path(year: 2025), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2024", mvps_path(year: 2024), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2023", mvps_path(year: 2023), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2022", mvps_path(year: 2022), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2021", mvps_path(year: 2021), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2020", mvps_path(year: 2020), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2019", mvps_path(year: 2019), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2018", mvps_path(year: 2018), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2017", mvps_path(year: 2017), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2016", mvps_path(year: 2016), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" %>
+        <%= link_to "2015", mvps_path(year: 2015), class: "block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-b-md" %>
+      </div>
+    </li>
+
     <% if logged_in? %>
       <li class="z-30 flex-auto text-center">
         <%= link_to "Partners", partners_path,

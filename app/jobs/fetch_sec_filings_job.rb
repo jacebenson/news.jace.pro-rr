@@ -206,14 +206,11 @@ class FetchSecFilingsJob < ApplicationJob
   end
 
   def get_summary(content)
-    api_key = ENV["OPENAI_API_KEY"] || ENV["GEMINI_API_KEY"]
-    return nil unless api_key.present?
-
-    # Prefer Gemini if available, fall back to OpenAI
-    if ENV["GEMINI_API_KEY"].present?
-      get_summary_gemini(content)
-    elsif ENV["OPENAI_API_KEY"].present?
+    # Prefer OpenAI (more reliable), fall back to Gemini
+    if ENV["OPENAI_API_KEY"].present?
       get_summary_openai(content)
+    elsif ENV["GEMINI_API_KEY"].present?
+      get_summary_gemini(content)
     else
       nil
     end

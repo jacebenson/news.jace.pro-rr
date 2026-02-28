@@ -27,8 +27,25 @@
                   <span class="text-slate-500 text-sm font-medium"><%= speaker.name.first.upcase %></span>
                 </div>
               <% end %>
-              <div class="min-w-0">
-                <div class="font-medium text-gray-900 text-sm"><%= speaker.name %></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-medium text-gray-900 text-sm"><%= speaker.name %></span>
+                  <%# Show MVP badge if speaker has awards %>
+                  <% if speaker.has_mvp_awards? %>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800">
+                      <%= speaker.mvp_award_count %>x MVP
+                    </span>
+                  <% end %>
+                  <%# Show Snapp cards as non-linked badges %>
+                  <% if speaker.has_snapp_cards? %>
+                    <% speaker.snapp_cards.each do |card| %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800"
+                            title="#{card.card_name} (#{card.edition})">
+                        <%= card.card_name %>
+                      </span>
+                    <% end %>
+                  <% end %>
+                </div>
                 <% if speaker.title.present? || speaker.company_name.present? %>
                   <div class="text-xs text-gray-500 truncate">
                     <%= [speaker.title, speaker.company_name].compact.reject(&:blank?).join(" · ") %>

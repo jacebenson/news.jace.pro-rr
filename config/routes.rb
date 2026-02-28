@@ -41,6 +41,9 @@ Rails.application.routes.draw do
   get "who/:name", to: "participants#show", as: :who
   post "participants/:id/link-company", to: "participants#link_company", as: :participant_link_company
 
+  # MVP Awards
+  get "mvps", to: "mvp_awards#index", as: :mvps
+
   # API endpoints
   namespace :api do
     get "companies/search", to: "companies#search"
@@ -70,6 +73,7 @@ Rails.application.routes.draw do
       member do
         post :link_company
       end
+      resources :mvp_awards, only: [ :new, :create, :destroy ]
     end
     resources :news_feeds
     resources :news_items

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_12_053007) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_27_200003) do
   create_table "companies", force: :cascade do |t|
     t.string "name"
     t.text "alias", default: "[]"
@@ -79,6 +79,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_12_053007) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["session_id"], name: "index_knowledge_sessions_on_session_id", unique: true
+  end
+
+  create_table "mvp_awards", force: :cascade do |t|
+    t.integer "participant_id", null: false
+    t.integer "year", null: false
+    t.string "award_type", null: false
+    t.string "source_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["award_type"], name: "index_mvp_awards_on_award_type"
+    t.index ["participant_id", "year", "award_type"], name: "index_mvp_awards_unique", unique: true
+    t.index ["participant_id"], name: "index_mvp_awards_on_participant_id"
+    t.index ["year"], name: "index_mvp_awards_on_year"
   end
 
   create_table "news_feeds", force: :cascade do |t|
@@ -212,6 +225,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_12_053007) do
     t.index ["source_app_id"], name: "index_servicenow_store_apps_on_source_app_id", unique: true
   end
 
+  create_table "snapp_cards", force: :cascade do |t|
+    t.integer "participant_id", null: false
+    t.string "edition", null: false
+    t.string "card_name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["edition"], name: "index_snapp_cards_on_edition"
+    t.index ["participant_id", "edition", "card_name"], name: "index_snapp_cards_unique", unique: true
+    t.index ["participant_id"], name: "index_snapp_cards_on_participant_id"
+  end
+
+  create_table "startup_founders", force: :cascade do |t|
+    t.integer "participant_id", null: false
+    t.string "company_name", null: false
+    t.string "source_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_name"], name: "index_startup_founders_on_company_name"
+    t.index ["participant_id", "company_name"], name: "index_startup_founders_unique", unique: true
+    t.index ["participant_id"], name: "index_startup_founders_on_participant_id"
+  end
+
   create_table "tags", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
@@ -234,6 +269,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_12_053007) do
   add_foreign_key "knowledge_session_lists", "users"
   add_foreign_key "knowledge_session_participants", "knowledge_sessions"
   add_foreign_key "knowledge_session_participants", "participants"
+  add_foreign_key "mvp_awards", "participants"
   add_foreign_key "news_item_participants", "news_items"
   add_foreign_key "news_item_participants", "participants"
   add_foreign_key "news_item_tags", "news_items"
@@ -241,4 +277,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_12_053007) do
   add_foreign_key "news_items", "news_feeds"
   add_foreign_key "participants", "companies"
   add_foreign_key "participants", "users"
+  add_foreign_key "snapp_cards", "participants"
+  add_foreign_key "startup_founders", "participants"
 end

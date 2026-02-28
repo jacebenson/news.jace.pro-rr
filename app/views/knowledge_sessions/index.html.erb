@@ -55,7 +55,7 @@
     </label>
 
     <span class="text-sm text-gray-500">
-      Showing <%= @sessions.total_count %> of <%= @total_count %> sessions
+      <%= @total_count %> sessions
     </span>
   <% end %>
 
@@ -104,7 +104,5 @@
     </div>
   <% end %>
 
-  <div class="mt-6">
-    <%= paginate @sessions %>
-  </div>
+
 </div>

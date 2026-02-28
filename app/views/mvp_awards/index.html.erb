@@ -1,0 +1,176 @@
+<% content_for :title, "ServiceNow MVPs" %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <%# Header %>
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">ServiceNow MVPs</h1>
+    <p class="text-gray-600">
+      Recognizing the most valuable professionals in the ServiceNow community
+    </p>
+  </div>
+
+  <%# Filters and Search %>
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+    <%= form_with url: mvps_path, method: :get, local: true, class: "space-y-4" do |f| %>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <%# Search %>
+        <div class="md:col-span-2">
+          <%= f.label :search, "Search", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.text_field :search, value: @search, placeholder: "Search by name...", 
+                          class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+        </div>
+        
+        <%# Year Filter %>
+        <div>
+          <%= f.label :year, "Year", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.select :year, 
+                      options_for_select([["All Years", ""]] + @available_years.map { |y| [y.to_s, y] }, @year),
+                      {},
+                      { class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
+        </div>
+        
+        <%# Award Type Filter %>
+        <div>
+          <%= f.label :award_type, "Award Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.select :award_type,
+                      options_for_select([["All Types", ""]] + @available_award_types.map { |t| [t, t] }, @award_type),
+                      {},
+                      { class: "w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" } %>
+        </div>
+      </div>
+      
+      <%# Filter Actions %>
+      <div class="flex flex-wrap items-center gap-3">
+        <%= f.submit "Apply Filters", class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" %>
+        <%= link_to "Clear Filters", mvps_path, class: "px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors" %>
+        
+        <%# Active filter badges %>
+        <% if @search.present? %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            Search: <%= @search %>
+            <%= link_to "×", mvps_path(year: @year, award_type: @award_type), class: "ml-1 text-blue-600 hover:text-blue-900" %>
+          </span>
+        <% end %>
+        
+        <% if @year.present? %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Year: <%= @year %>
+            <%= link_to "×", mvps_path(search: @search, award_type: @award_type), class: "ml-1 text-green-600 hover:text-green-900" %>
+          </span>
+        <% end %>
+        
+        <% if @award_type.present? %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <%= @award_type %>
+            <%= link_to "×", mvps_path(search: @search, year: @year), class: "ml-1 text-purple-600 hover:text-purple-900" %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Awards Summary %>
+  <% if @chart_data && @chart_data[:labels].present? %>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <h2 class="text-sm font-semibold text-gray-700 mb-3">Awards by Year</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+        <% @chart_data[:labels].each_with_index do |year, index| %>
+          <% count = @chart_data[:values][index] %>
+          <div class="bg-gray-50 rounded-lg p-2 text-center">
+            <span class="block text-lg font-bold text-blue-600"><%= count %></span>
+            <span class="block text-xs text-gray-500"><%= year %></span>
+          </div>
+        <% end %>
+      </div>
+      <p class="text-xs text-gray-500 mt-3 text-right"><%= @chart_data[:values].sum %> total awards</p>
+    </div>
+  <% end %>
+
+   <%# Results Count %>
+  <div class="mb-6 flex items-center justify-between">
+    <p class="text-gray-600">
+      Showing <%= @participants.total_count %> MVPs
+    </p>
+  </div>
+
+  <%# MVP Grid %>
+  <% if @participants_with_awards.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+      <% @participants_with_awards.each do |data| %>
+        <% participant = data[:participant] %>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+          <%# Participant Link %>
+          <%= link_to who_path(name: participant.slug), class: "block p-4" do %>
+            <%# Name, Title, Company, and Award Count %>
+            <div class="mb-3">
+              <h3 class="text-base font-semibold text-gray-900 truncate"><%= participant.name %></h3>
+              <% if participant.title.present? %>
+                <p class="text-xs text-gray-600 truncate mt-0.5"><%= participant.title %></p>
+              <% end %>
+              <% if participant.company_name.present? || participant.company&.name.present? %>
+                <p class="text-xs text-blue-600 truncate mt-0.5">
+                  <% if participant.company %>
+                    <%= participant.company.name %>
+                  <% else %>
+                    <%= participant.company_name %>
+                  <% end %>
+                </p>
+              <% end %>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 mt-1.5">
+                <%= data[:award_count] %> <%= data[:award_count] == 1 ? 'Award' : 'Awards' %>
+              </span>
+            </div>
+            
+            <%# Awards List - Compact %>
+            <div class="space-y-1.5">
+              <% data[:awards_by_year].each do |year, awards| %>
+                <div class="flex items-start gap-2">
+                  <span class="text-xs font-medium text-gray-500 min-w-[2.5rem]"><%= year %></span>
+                  <div class="flex flex-wrap gap-0.5">
+                    <% awards.each do |award| %>
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium <%= award.badge_color %>">
+                        <%= award.award_type %>
+                      </span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+          
+          <%# Source links - separate from main card link %>
+          <% sources = data[:awards_by_year].values.flatten.select { |a| a.source_url.present? } %>
+          <% if sources.any? %>
+            <div class="px-4 pb-3 pt-1 border-t border-gray-50">
+              <div class="flex items-center gap-2 text-[10px] text-gray-500">
+                <span>Sources:</span>
+                <% sources.first(3).each do |award| %>
+                  <%= link_to award.year, award.source_url, target: "_blank", rel: "noopener",
+                      class: "text-blue-600 hover:underline" %>
+                <% end %>
+                <% if sources.size > 3 %>
+                  <span class="text-gray-400">+<%= sources.size - 3 %> more</span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    
+    <%# Pagination %>
+    <div class="mt-6">
+      <%= paginate @participants %>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No MVPs found</h3>
+      <p class="mt-1 text-sm text-gray-500">
+        Try adjusting your filters or search criteria.
+      </p>
+    </div>
+  <% end %>
+</div>

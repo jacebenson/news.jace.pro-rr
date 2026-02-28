@@ -13,6 +13,10 @@ module Admin
 
       @active_feeds = NewsFeed.where(active: true).count
 
+      # MVP Awards stats
+      @mvp_awards_count = MvpAward.count
+      @mvp_participants_count = Participant.with_mvp_awards.count
+
       # System health
       @pending_jobs = SolidQueue::Job.where(finished_at: nil).count rescue 0
       @failed_jobs = SolidQueue::FailedExecution.count rescue 0

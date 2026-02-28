@@ -1,4 +1,6 @@
 class KnowledgeSessionsController < ApplicationController
+  before_action :set_event_path_helper
+
   def index
     @show_nav_tabs = true
     @event = params[:event] || "k26"
@@ -92,7 +94,7 @@ class KnowledgeSessionsController < ApplicationController
       .sort
 
     @total_count = sessions.count
-    @sessions = sessions.order(:title_sort, :title).page(params[:page]).per(50)
+    @sessions = sessions.order(:title_sort, :title)
   end
 
   private
@@ -136,5 +138,9 @@ class KnowledgeSessionsController < ApplicationController
 
     # ServiceNow-only = has speakers but no non-ServiceNow speakers
     sessions_with_speakers - sessions_with_non_sn
+  end
+
+  def set_event_path_helper
+    @event = params[:event] || "k26"
   end
 end

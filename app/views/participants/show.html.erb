@@ -1,6 +1,6 @@
 <% content_for :title, "#{@participant.name} - News Jace Pro" %>
 
-<div class="mt-4">
+<div class="mt-4 max-w-5xl mx-auto">
   <%# Admin panel for linking company %>
   <% if current_user&.admin? %>
     <div class="mb-6 p-4 rounded-lg border <%= @participant.company_id.nil? && @participant.company_name.present? ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 bg-gray-50' %>">
@@ -94,118 +94,255 @@
     </div>
   <% end %>
 
-  <div class="flex flex-col md:flex-row gap-6 mb-8">
-    <div class="flex-shrink-0">
-      <% if @participant.image_url.present? %>
-        <img src="<%= @participant.image_url %>" alt="<%= @participant.name %>"
-             class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-lg">
-      <% else %>
-        <div class="h-32 w-32 rounded-full bg-slate-200 flex items-center justify-center text-4xl font-bold text-slate-500">
-          <%= @participant.name.split.map(&:first).join %>
-        </div>
-      <% end %>
-    </div>
-
-    <div class="flex-1">
-      <h1 class="text-3xl font-bold text-gray-900"><%= @participant.name %></h1>
-      
-      <% if @participant.title.present? %>
-        <p class="text-lg text-gray-600 mt-1"><%= @participant.title %></p>
-      <% end %>
-
-      <% if @participant.company_name.present? || @participant.company&.name.present? %>
-        <p class="text-gray-500 mt-1">
-          <% if @participant.company %>
-            <%= link_to @participant.company.name, partners_search_path(search: @participant.company.name), class: "text-blue-600 hover:underline" %>
+  <%# Main Profile Header %>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="p-6 md:p-8">
+      <div class="flex flex-col md:flex-row gap-6">
+        <%# Avatar %>
+        <div class="flex-shrink-0 mx-auto md:mx-0">
+          <% if @participant.image_url.present? %>
+            <img src="<%= @participant.image_url %>" alt="<%= @participant.name %>"
+                 class="h-28 w-28 md:h-32 md:w-32 rounded-full object-cover border-4 border-white shadow-lg">
           <% else %>
-            <%= @participant.company_name %>
+            <div class="h-28 w-28 md:h-32 md:w-32 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-4xl font-bold text-blue-600 shadow-lg">
+              <%= @participant.name.split.map(&:first).join %>
+            </div>
           <% end %>
-        </p>
-      <% end %>
-
-      <% if @participant.bio.present? %>
-        <div class="mt-4 prose prose-sm max-w-none text-gray-700">
-          <%= simple_format(@participant.bio) %>
         </div>
-      <% end %>
 
-      <div class="mt-4 flex gap-4">
-        <% if @participant.linkedin_url.present? %>
-          <%= link_to @participant.linkedin_url, target: "_blank", rel: "noopener",
-              class: "inline-flex items-center gap-1 text-blue-600 hover:underline" do %>
-            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
-            LinkedIn
+        <%# Info %>
+        <div class="flex-1 text-center md:text-left">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900"><%= @participant.name %></h1>
+          
+          <% if @participant.title.present? %>
+            <p class="text-base md:text-lg text-gray-600 mt-1"><%= @participant.title %></p>
           <% end %>
-        <% else %>
-          <% search_query = [@participant.name, @participant.company_name].compact.join(" ") %>
-          <%= link_to "https://www.linkedin.com/search/results/all/?keywords=#{ERB::Util.url_encode(search_query)}", 
-              target: "_blank", rel: "noopener",
-              class: "inline-flex items-center gap-1 text-gray-400 hover:text-blue-600",
-              title: "Search LinkedIn for #{@participant.name}" do %>
-            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
-            Search LinkedIn
+
+          <% if @participant.company_name.present? || @participant.company&.name.present? %>
+            <p class="text-gray-500 mt-1">
+              <% if @participant.company %>
+                <%= link_to @participant.company.name, partners_search_path(search: @participant.company.name), class: "text-blue-600 hover:underline" %>
+              <% else %>
+                <%= @participant.company_name %>
+              <% end %>
+            </p>
           <% end %>
-        <% end %>
+
+          <%# Awards & Badges Row %>
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-4">
+            <%# MVP Badge with years %>
+            <% if @participant.has_mvp_awards? %>
+              <%= link_to mvps_path, class: "inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors" do %>
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                <span class="font-semibold text-sm"><%= @participant.mvp_award_count %>x MVP</span>
+              <% end %>
+              
+              <%# Year pills - show all years %>
+              <% @participant.mvp_years.each do |year| %>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                  <%= year %>
+                </span>
+              <% end %>
+            <% end %>
+
+            <%# Snapp Cards %>
+            <% if @participant.has_snapp_cards? %>
+              <% @participant.snapp_cards.each do |card| %>
+                <%= link_to "https://kevinclark.com.au/shop/", target: "_blank", rel: "noopener",
+                    class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-800 hover:bg-green-200 transition-colors",
+                    title: "#{card.card_name} (#{card.edition})" do %>
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                  </svg>
+                  <span class="font-semibold text-sm"><%= card.card_name %></span>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+
+          <%# Bio %>
+          <% if @participant.bio.present? %>
+            <div class="mt-4 prose prose-sm max-w-none text-gray-600 text-left">
+              <%= simple_format(@participant.bio) %>
+            </div>
+          <% end %>
+
+          <%# LinkedIn Link %>
+          <div class="mt-4 flex justify-center md:justify-start">
+            <% if @participant.linkedin_url.present? %>
+              <%= link_to @participant.linkedin_url, target: "_blank", rel: "noopener",
+                  class: "inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors" do %>
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                <span class="text-sm">LinkedIn</span>
+              <% end %>
+            <% else %>
+              <% search_query = [@participant.name, @participant.company_name].compact.join(" ") %>
+              <%= link_to "https://www.linkedin.com/search/results/all/?keywords=#{ERB::Util.url_encode(search_query)}", 
+                  target: "_blank", rel: "noopener",
+                  class: "inline-flex items-center gap-2 text-gray-400 hover:text-blue-600 transition-colors",
+                  title: "Search LinkedIn for #{@participant.name}" do %>
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                <span class="text-sm">Search LinkedIn</span>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
       </div>
     </div>
+
+    <%# MVP Awards Detail - Collapsible %>
+    <% if @participant.has_mvp_awards? %>
+      <div class="border-t border-gray-100 bg-gray-50/50">
+        <details class="group">
+          <summary class="px-6 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <span class="text-sm font-medium text-gray-700">View all <%= @participant.mvp_award_count %> MVP awards</span>
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-4">
+            <div class="space-y-2">
+              <% @participant.mvp_awards_by_year.each do |year, awards| %>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-semibold text-gray-700 w-12"><%= year %></span>
+                  <div class="flex flex-wrap gap-1.5">
+                    <% awards.each do |award| %>
+                      <% if award.source_url.present? %>
+                        <%= link_to award.source_url, target: "_blank", rel: "noopener",
+                            class: "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium #{award.badge_color} hover:opacity-80 transition-opacity" do %>
+                          <%= award.award_type %>
+                          <svg class="ml-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        <% end %>
+                      <% else %>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= award.badge_color %>">
+                          <%= award.award_type %>
+                        </span>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </details>
+      </div>
+    <% end %>
   </div>
 
-  <% if @news_items.any? %>
-    <section class="mb-8">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-gray-900">Recent News</h2>
-        <%= link_to "View all", items_by_participant_path(participant: @participant.slug), class: "text-blue-600 hover:underline text-sm" %>
-      </div>
+  <%# Startup Founder Section %>
+  <% if @participant.is_startup_founder? %>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        Startup Founder
+      </h2>
       
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        <% @news_items.each do |item| %>
-          <%= render "news_items/card", item: item %>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
-
-  <% if @knowledge_sessions.any? %>
-    <section>
-      <h2 class="text-xl font-bold text-gray-900 mb-4">Conference Sessions</h2>
-      
-      <div class="space-y-4">
-        <% @knowledge_sessions.each do |ksession| %>
-          <div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-start gap-3">
-              <%= link_to "/#{ksession.event_short_code}", 
-                  class: "rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-200" do %>
-                <%= ksession.event_name %>
+      <div class="space-y-2">
+        <% @participant.startup_founders.each do |founder| %>
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="font-medium text-gray-900"><%= founder.company_name %></span>
+            
+            <% if founder.source_url.present? %>
+              <%= link_to founder.source_url, target: "_blank", rel: "noopener",
+                  class: "text-sm text-blue-600 hover:underline inline-flex items-center gap-1" do %>
+                <span>Acquisition news</span>
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
               <% end %>
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900"><%= ksession.title %></h3>
-                <% if ksession.code.present? %>
-                  <p class="text-sm text-gray-500"><%= ksession.code %></p>
-                <% end %>
-                <% if ksession.abstract.present? %>
-                  <p class="mt-2 text-sm text-gray-600 line-clamp-2"><%= ksession.abstract %></p>
-                <% end %>
-                <% if ksession.recording_url.present? %>
-                  <p class="mt-2">
-                    <%= link_to ksession.recording_url, target: "_blank", rel: "noopener",
-                        class: "inline-flex items-center gap-1 text-sm text-blue-600 hover:underline" do %>
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      Watch Recording
-                    <% end %>
-                  </p>
-                <% end %>
-              </div>
-            </div>
+            <% end %>
           </div>
         <% end %>
       </div>
-    </section>
+    </div>
+  <% end %>
+
+  <%# Two Column Layout: Sessions and News %>
+  <% if @knowledge_sessions.any? || @news_items.any? %>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <%# Conference Sessions - First on mobile, Left on desktop %>
+      <% if @knowledge_sessions.any? %>
+        <section class="order-1">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Conference Sessions
+            </h2>
+            <span class="text-sm text-gray-500"><%= @knowledge_sessions.count %> total</span>
+          </div>
+          
+          <div class="space-y-3">
+            <% @knowledge_sessions.each do |ksession| %>
+              <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-start gap-3">
+                  <%= link_to "/#{ksession.event_short_code}", 
+                      class: "flex-shrink-0 rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-200" do %>
+                    <%= ksession.event_name %>
+                  <% end %>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-900 text-sm"><%= ksession.title %></h3>
+                    <% if ksession.code.present? %>
+                      <p class="text-xs text-gray-500 mt-0.5"><%= ksession.code %></p>
+                    <% end %>
+                    <% if ksession.recording_url.present? %>
+                      <p class="mt-2">
+                        <%= link_to ksession.recording_url, target: "_blank", rel: "noopener",
+                            class: "inline-flex items-center gap-1 text-xs text-blue-600 hover:underline" do %>
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                          Watch
+                        <% end %>
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          
+        </section>
+      <% end %>
+
+      <%# Recent News - Second on mobile, Right on desktop %>
+      <% if @news_items.any? %>
+        <section class="order-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+              Recent News
+            </h2>
+            <%= link_to "View all", items_by_participant_path(participant: @participant.slug), class: "text-blue-600 hover:underline text-sm" %>
+          </div>
+          
+          <div class="space-y-3">
+            <% @news_items.first(5).each do |item| %>
+              <%= render "news_items/card", item: item %>
+            <% end %>
+          </div>
+          
+          <% if @news_items.size > 5 %>
+            <div class="mt-4 text-center">
+              <%= link_to "View all news", items_by_participant_path(participant: @participant.slug), class: "text-blue-600 hover:underline text-sm" %>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
   <% end %>
 </div>
