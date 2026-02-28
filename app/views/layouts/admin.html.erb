@@ -88,6 +88,8 @@
           <div class="pt-4 mt-4 border-t border-slate-700">
             <%= link_to "Background Jobs", admin_background_jobs_path,
                 class: "block px-3 py-2 rounded hover:bg-slate-700" %>
+            <%= link_to "Test Email", new_admin_email_test_path,
+                class: "block px-3 py-2 rounded hover:bg-slate-700 #{request.path.start_with?('/admin/email_tests') ? 'bg-slate-700' : ''}" %>
           </div>
         </nav>
 

@@ -86,6 +86,7 @@ Rails.application.routes.draw do
     post "background-jobs/cancel", to: "background_jobs#cancel_job", as: :cancel_job
     post "background-jobs/retry-failed", to: "background_jobs#retry_failed", as: :retry_failed
     post "background-jobs/clear-failed", to: "background_jobs#clear_failed", as: :clear_failed
+    resources :email_tests, only: [ :new, :create ]
   end
 
   # Catch-all slug route (must be last)
