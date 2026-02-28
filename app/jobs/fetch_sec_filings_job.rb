@@ -180,6 +180,13 @@ class FetchSecFilingsJob < ApplicationJob
     return nil unless response.success?
 
     data = response.parsed_response
+
+    # Handle case where SEC returns string instead of hash
+    unless data.is_a?(Hash)
+      Rails.logger.error "[SEC] Expected JSON hash but got: #{data.class}"
+      return nil
+    end
+
     items = data.dig("directory", "item") || []
 
     # Find the main .txt file
@@ -238,7 +245,7 @@ class FetchSecFilingsJob < ApplicationJob
       }
     )
 
-    response.dig("choices", 0, "message", "content")
+    response.is_a?(Hash) ? response.dig("choices", 0, "message", "content") : nil
   rescue => e
     Rails.logger.error "[SEC] Gemini error: #{e.message}"
     # Fall back to OpenAI
@@ -261,7 +268,7 @@ class FetchSecFilingsJob < ApplicationJob
       }
     )
 
-    response.dig("choices", 0, "message", "content")
+    response.is_a?(Hash) ? response.dig("choices", 0, "message", "content") : nil
   rescue => e
     Rails.logger.error "[SEC] OpenAI error: #{e.message}"
     nil
