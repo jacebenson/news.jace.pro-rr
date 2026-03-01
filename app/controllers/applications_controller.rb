@@ -89,6 +89,9 @@ class ApplicationsController < ApplicationController
     apps = apps.order(sort_column => sort_direction)
 
     @apps = apps.page(params[:page]).per(50)
+
+    # Get unique company names for autocomplete
+    @companies = ServicenowStoreApp.where.not(company_name: [ nil, "" ]).distinct.pluck(:company_name).sort
   end
 
   def show

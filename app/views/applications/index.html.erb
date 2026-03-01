@@ -10,8 +10,13 @@
     <%= form_with url: applications_path, method: :get, class: "flex flex-wrap gap-2 items-center", local: true do |f| %>
       <%= f.text_field :search, value: @search, placeholder: "Search apps...",
           class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm w-48" %>
-      <%= f.text_field :company, value: @company, placeholder: "Company...",
+      <%= f.text_field :company, value: @company, placeholder: "Company...", list: "company-list",
           class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm w-40" %>
+      <datalist id="company-list">
+        <% @companies.each do |company| %>
+          <option value="<%= company %>">
+        <% end %>
+      </datalist>
       <%= f.select :app_type, options_for_select(ServicenowStoreApp.distinct.pluck(:app_type).compact.sort, @app_type),
           { include_blank: "All Types" },
           class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
