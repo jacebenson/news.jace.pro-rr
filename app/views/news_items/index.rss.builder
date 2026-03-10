@@ -7,12 +7,12 @@ xml.rss version: "2.0", "xmlns:atom" => "http://www.w3.org/2005/Atom" do
   xml.channel do
     # Required channel elements
     xml.title "News Jace Pro"
-    xml.link root_url
+    xml.link request.base_url
     xml.description "ServiceNow ecosystem news, articles, podcasts, and videos"
     xml.language "en-us"
 
     # Atom self-link (helps feed readers identify the feed URL)
-    xml.tag!("atom:link", href: feed_url(format: :rss), rel: "self", type: "application/rss+xml")
+    xml.tag!("atom:link", href: request.original_url, rel: "self", type: "application/rss+xml")
 
     # Optional but useful channel elements
     xml.lastBuildDate @news_items.first&.published_at&.rfc2822
