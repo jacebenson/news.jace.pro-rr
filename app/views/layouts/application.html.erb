@@ -11,6 +11,7 @@
     <%= yield :head %>
 
     <link rel="icon" href="/favicon.png" type="image/png">
+    <%= auto_discovery_link_tag :rss, feed_url(format: :rss), title: "News Jace Pro RSS Feed" %>
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>

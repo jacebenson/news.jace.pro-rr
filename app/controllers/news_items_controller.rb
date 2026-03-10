@@ -33,7 +33,16 @@ class NewsItemsController < ApplicationController
       end
     end
 
-    @news_items = items.order(published_at: :desc).page(params[:page]).per(25)
+    respond_to do |format|
+      format.html do
+        # HTML gets pagination (25 per page)
+        @news_items = items.order(published_at: :desc).page(params[:page]).per(25)
+      end
+      format.rss do
+        # RSS gets the 50 most recent items, no pagination
+        @news_items = items.order(published_at: :desc).limit(50)
+      end
+    end
   end
 
   def show
