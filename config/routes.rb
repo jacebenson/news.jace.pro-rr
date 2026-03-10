@@ -5,6 +5,9 @@ Rails.application.routes.draw do
   # Root redirects to news items
   root "news_items#index"
 
+  # RSS feed
+  get "feed", to: "news_items#index", as: :feed, defaults: { format: "rss" }
+
   # Authentication
   get "login", to: "sessions#new"
   post "login", to: "sessions#create"
