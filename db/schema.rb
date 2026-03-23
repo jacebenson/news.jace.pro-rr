@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_23_185402) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_23_192059) do
   create_table "capability_product_store_apps", force: :cascade do |t|
     t.integer "capability_product_id", null: false
     t.integer "servicenow_store_app_id", null: false
@@ -103,6 +103,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_23_185402) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "last_seen_at"
+    t.string "url"
     t.index ["session_id"], name: "index_knowledge_sessions_on_session_id", unique: true
   end
 

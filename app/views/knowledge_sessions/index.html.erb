@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <%# Navigation tabs - Parties / All Sessions / Expo Map %>
+  <%# Navigation tabs - Parties / All Sessions / Expo Map / Add Event %>
   <div class="mb-4 flex flex-wrap gap-2">
     <%= link_to "Parties", send("#{@event}_path", tags: "party"),
         class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags == 'party' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
@@ -35,6 +35,10 @@
     <% if @event == "k26" %>
       <%= link_to "Expo Map ↗", "https://knowledge26.expofp.com", target: "_blank", rel: "noopener",
           class: "px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+    <% end %>
+    <% if admin? %>
+      <%= link_to "+ Add Event", new_admin_knowledge_session_path(event: @event),
+          class: "px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700" %>
     <% end %>
   </div>
 

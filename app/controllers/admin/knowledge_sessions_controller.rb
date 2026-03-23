@@ -25,6 +25,10 @@ module Admin
 
     def new
       @session = KnowledgeSession.new
+      # Pre-select event if passed in params
+      if params[:event].present?
+        @session.event_id = KnowledgeSession::EVENT_IDS[params[:event].to_sym]
+      end
     end
 
     def edit
@@ -32,6 +36,7 @@ module Admin
 
     def create
       @session = KnowledgeSession.new(session_params)
+      @session.last_seen_at = Time.current  # Prevent showing as stale
       if @session.save
         redirect_to admin_knowledge_sessions_path, notice: "Session created."
       else
@@ -71,7 +76,7 @@ module Admin
 
     def session_params
       params.require(:knowledge_session).permit(:title, :abstract, :code, :session_id,
-                                                :event_id, :recording_url)
+                                                :event_id, :recording_url, :url, :times)
     end
   end
 end

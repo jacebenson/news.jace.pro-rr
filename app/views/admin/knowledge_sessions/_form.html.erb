@@ -13,11 +13,12 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <%= f.label :code, class: "block text-sm font-medium text-gray-700" %>
-        <%= f.text_field :code, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+        <%= f.text_field :code, placeholder: "e.g., PARTY001", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+        <p class="mt-1 text-xs text-gray-500">Start with PARTY for party/social events</p>
       </div>
       <div>
         <%= f.label :event_id, "Event", class: "block text-sm font-medium text-gray-700" %>
-        <%= f.select :event_id, options_for_select([["K26", "k26"], ["K25", "k25"], ["K24", "k24"], ["K23", "k23"], ["K22", "k22"], ["K21", "k21"], ["K20", "k20"], ["nullEDGE 25", "nulledge25"]], session.event_id),
+        <%= f.select :event_id, options_for_select(KnowledgeSession::EVENT_IDS.map { |k, v| [k.to_s.upcase, v] }, session.event_id || KnowledgeSession::EVENT_IDS[:k26]),
             {}, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
       </div>
     </div>
@@ -33,6 +34,18 @@
     </div>
 
     <div>
+      <%= f.label :url, "Event URL", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.url_field :url, placeholder: "https://...", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      <p class="mt-1 text-xs text-gray-500">Link to registration page or event details</p>
+    </div>
+
+    <div>
+      <%= f.label :times, "Date/Time/Location (JSON)", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_area :times, rows: 3, placeholder: '[{"date":"2026-05-05","startTimeFormatted":"5:00 PM","endTimeFormatted":"7:30 PM","room":"Venue Name"}]', class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm font-mono text-sm" %>
+      <p class="mt-1 text-xs text-gray-500">JSON array with date, startTimeFormatted, endTimeFormatted, room</p>
+    </div>
+
+    <div>
       <%= f.label :recording_url, "Recording URL", class: "block text-sm font-medium text-gray-700" %>
       <%= f.url_field :recording_url, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
     </div>
@@ -40,6 +53,7 @@
     <div>
       <%= f.label :session_id, "ServiceNow Session ID", class: "block text-sm font-medium text-gray-700" %>
       <%= f.text_field :session_id, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm" %>
+      <p class="mt-1 text-xs text-gray-500">Optional - for linking to knowledge.servicenow.com</p>
     </div>
 
     <div class="flex gap-4 pt-4">

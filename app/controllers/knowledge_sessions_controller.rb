@@ -58,9 +58,14 @@ class KnowledgeSessionsController < ApplicationController
     # Tags filter (for parties, etc.)
     if params[:tags].present?
       @tags = params[:tags]
-      safe_tags = sanitize_sql_like(@tags)
-      tag_term = "%#{safe_tags}%"
-      sessions = sessions.where("title LIKE ? OR abstract LIKE ?", tag_term, tag_term)
+      if @tags == "party"
+        # Special handling for parties - look for PARTY code prefix
+        sessions = sessions.where("code LIKE ?", "PARTY%")
+      else
+        safe_tags = sanitize_sql_like(@tags)
+        tag_term = "%#{safe_tags}%"
+        sessions = sessions.where("title LIKE ? OR abstract LIKE ?", tag_term, tag_term)
+      end
     end
 
     # Company filter - filter sessions by speaker's company
