@@ -24,7 +24,7 @@ module Admin
 
       # Get next scheduled run for each job type
       @next_runs = {}
-      job_classes = %w[FetchNewsItemsJob FetchAppsJob EnrichItemJob FetchPartnersJob EnrichPartnersJob LinkParticipantsJob FetchSecFilingsJob BackupJob]
+      job_classes = %w[FetchNewsItemsJob FetchAppsJob EnrichItemJob FetchPartnersJob EnrichPartnersJob LinkParticipantsJob FetchSecFilingsJob FetchKnowledgeSessionsJob BackupJob]
       job_classes.each do |job_class|
         next_job = SolidQueue::Job.where(class_name: job_class)
                                   .where(finished_at: nil)
@@ -60,6 +60,9 @@ module Admin
       when "fetch_sec_filings"
         FetchSecFilingsJob.perform_later
         flash[:notice] = "FetchSecFilingsJob enqueued"
+      when "fetch_knowledge_sessions"
+        FetchKnowledgeSessionsJob.perform_later(event: "k26")
+        flash[:notice] = "FetchKnowledgeSessionsJob enqueued (K26)"
       when "backup"
         BackupJob.perform_later(force: true)
         flash[:notice] = "BackupJob enqueued (forced)"

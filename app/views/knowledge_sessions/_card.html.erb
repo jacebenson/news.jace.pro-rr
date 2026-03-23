@@ -1,4 +1,4 @@
-<div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+<div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow <%= 'opacity-60 border-amber-300 bg-amber-50' if ksession.stale? %>">
   <div class="flex flex-col md:flex-row md:items-start gap-4">
     <div class="flex-shrink-0">
       <% if ksession.code.present? %>
@@ -6,65 +6,118 @@
           <%= ksession.code %>
         </span>
       <% end %>
+      <% if ksession.stale? %>
+        <span class="inline-block rounded bg-amber-100 text-amber-800 px-2 py-1 text-xs mt-1" title="Last seen in official catalog: <%= ksession.last_seen_at&.strftime('%b %d, %Y') %>">
+          ⚠️ May be cancelled
+        </span>
+      <% end %>
     </div>
 
     <div class="flex-1 min-w-0">
-      <h3 class="font-semibold text-gray-900 text-lg"><%= ksession.title %></h3>
+      <h3 class="font-semibold text-gray-900 text-lg">
+        <% if ksession.knowledge_url.present? %>
+          <%= link_to ksession.title, ksession.knowledge_url, target: "_blank", rel: "noopener", class: "hover:text-blue-600" %>
+        <% else %>
+          <%= ksession.title %>
+        <% end %>
+      </h3>
 
       <% if ksession.abstract.present? %>
         <p class="mt-2 text-sm text-gray-600 line-clamp-3"><%= ksession.abstract %></p>
       <% end %>
 
-      <% if ksession.speakers.any? %>
+      <%
+        # For admins, show all speakers (including hidden). For others, only visible ones.
+        speakers_to_show = if admin?
+          ksession.knowledge_session_participants.includes(:participant).map do |ksp|
+            { participant: ksp.participant, hidden: ksp.hidden }
+          end
+        else
+          ksession.speakers.map { |s| { participant: s, hidden: false } }
+        end
+      %>
+      <% if speakers_to_show.any? %>
         <div class="mt-3 space-y-2">
-          <% ksession.speakers.each do |speaker| %>
-            <%= link_to who_path(name: speaker.slug),
-                class: "flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2 hover:bg-slate-100 transition-colors" do %>
-              <% if speaker.image_url.present? %>
-                <img src="<%= speaker.image_url %>" alt="" class="h-10 w-10 rounded-full object-cover flex-shrink-0">
-              <% else %>
-                <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
-                  <span class="text-slate-500 text-sm font-medium"><%= speaker.name.first.upcase %></span>
-                </div>
-              <% end %>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-medium text-gray-900 text-sm"><%= speaker.name %></span>
-                  <%# Show MVP badge if speaker has awards %>
-                  <% if speaker.has_mvp_awards? %>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800">
-                      <%= speaker.mvp_award_count %>x MVP
-                    </span>
-                  <% end %>
-                  <%# Show Snapp cards as non-linked badges %>
-                  <% if speaker.has_snapp_cards? %>
-                    <% speaker.snapp_cards.each do |card| %>
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800"
-                            title="#{card.card_name} (#{card.edition})">
-                        <%= card.card_name %>
-                      </span>
-                    <% end %>
-                  <% end %>
-                  <%# Show Startup Founder badges %>
-                  <% if speaker.is_startup_founder? %>
-                    <% speaker.startup_founders.each do |founder| %>
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800"
-                            title="Founder of #{founder.company_name}">
-                        <svg class="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <%= founder.company_name %>
-                      </span>
-                    <% end %>
-                  <% end %>
-                </div>
-                <% if speaker.title.present? || speaker.company_name.present? %>
-                  <div class="text-xs text-gray-500 truncate">
-                    <%= [speaker.title, speaker.company_name].compact.reject(&:blank?).join(" · ") %>
+          <% speakers_to_show.each do |speaker_info| %>
+            <% speaker = speaker_info[:participant] %>
+            <% is_hidden = speaker_info[:hidden] %>
+            <div class="flex items-center gap-2 <%= 'opacity-50' if is_hidden %>">
+              <%= link_to who_path(name: speaker.slug),
+                  class: "flex-1 flex items-center gap-3 rounded-lg #{is_hidden ? 'bg-red-50 border border-red-200' : 'bg-slate-50'} px-3 py-2 hover:bg-slate-100 transition-colors" do %>
+                <% if speaker.image_url.present? %>
+                  <img src="<%= speaker.image_url %>" alt="" class="h-10 w-10 rounded-full object-cover flex-shrink-0">
+                <% else %>
+                  <div class="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
+                    <span class="text-slate-500 text-sm font-medium"><%= speaker.name.first.upcase %></span>
                   </div>
                 <% end %>
-              </div>
-            <% end %>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-medium text-gray-900 text-sm"><%= speaker.name %></span>
+                    <% if is_hidden %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
+                        Hidden
+                      </span>
+                    <% end %>
+                    <%# Show MVP badge if speaker has awards %>
+                    <% if speaker.has_mvp_awards? %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800">
+                        <%= speaker.mvp_award_count %>x MVP
+                      </span>
+                    <% end %>
+                    <%# Show Snapp cards as non-linked badges %>
+                    <% if speaker.has_snapp_cards? %>
+                      <% speaker.snapp_cards.each do |card| %>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800"
+                              title="#{card.card_name} (#{card.edition})">
+                          <%= card.card_name %>
+                        </span>
+                      <% end %>
+                    <% end %>
+                    <%# Show Startup Founder badges %>
+                    <% if speaker.is_startup_founder? %>
+                      <% speaker.startup_founders.each do |founder| %>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800"
+                              title="Founder of #{founder.company_name}">
+                          <svg class="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <%= founder.company_name %>
+                        </span>
+                      <% end %>
+                    <% end %>
+                  </div>
+                  <% if speaker.title.present? || speaker.company_name.present? %>
+                    <div class="text-xs text-gray-500 truncate">
+                      <%= [speaker.title, speaker.company_name].compact.reject(&:blank?).join(" · ") %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+              <% if admin? %>
+                <% if is_hidden %>
+                  <%= button_to unhide_session_speaker_path(ksession, speaker),
+                      method: :post,
+                      class: "p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded",
+                      title: "Show #{speaker.name} in this session" do %>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  <% end %>
+                <% else %>
+                  <%= button_to hide_session_speaker_path(ksession, speaker),
+                      method: :post,
+                      class: "p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded",
+                      title: "Hide #{speaker.name} from this session",
+                      data: { turbo_confirm: "Hide #{speaker.name} from this session?" } do %>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                    </svg>
+                  <% end %>
+                <% end %>
+              <% end %>
+            </div>
           <% end %>
         </div>
       <% end %>
@@ -99,4 +152,9 @@
       <% end %>
     </div>
   </div>
+  <% if ksession.last_seen_at.present? %>
+    <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
+      Last seen: <span title="<%= ksession.last_seen_at.iso8601 %>"><%= time_ago_in_words(ksession.last_seen_at) %> ago</span>
+    </div>
+  <% end %>
 </div>

@@ -1,11 +1,25 @@
 <%# Renders a single job row with run button, next scheduled time, and cancel button %>
 <%# locals: job_key, job_class, label, description, color, next_run %>
 
+<%
+  button_classes = case color
+  when "blue"   then "bg-blue-600 hover:bg-blue-700"
+  when "green"  then "bg-green-600 hover:bg-green-700"
+  when "purple" then "bg-purple-600 hover:bg-purple-700"
+  when "indigo" then "bg-indigo-600 hover:bg-indigo-700"
+  when "teal"   then "bg-teal-600 hover:bg-teal-700"
+  when "orange" then "bg-orange-600 hover:bg-orange-700"
+  when "red"    then "bg-red-600 hover:bg-red-700"
+  when "gray"   then "bg-gray-600 hover:bg-gray-700"
+  else "bg-slate-600 hover:bg-slate-700"
+  end
+%>
+
 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
   <div class="flex items-center gap-4">
     <%= button_to label, admin_run_job_path(job: job_key), 
         method: :post, 
-        class: "bg-#{color}-600 text-white px-4 py-2 rounded hover:bg-#{color}-700 text-sm font-medium",
+        class: "#{button_classes} text-white px-4 py-2 rounded text-sm font-medium",
         data: { turbo_confirm: "Run #{job_class} now?" } %>
     <div>
       <p class="text-sm text-gray-600"><%= description %></p>

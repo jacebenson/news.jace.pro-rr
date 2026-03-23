@@ -1,6 +1,8 @@
 class KnowledgeSession < ApplicationRecord
   has_many :knowledge_session_participants, dependent: :destroy
-  has_many :speakers, through: :knowledge_session_participants, source: :participant
+  has_many :speakers, -> { where(knowledge_session_participants: { hidden: false }) },
+           through: :knowledge_session_participants, source: :participant
+  has_many :all_speakers, through: :knowledge_session_participants, source: :participant
 
   has_many :knowledge_session_lists, dependent: :destroy
   has_many :users, through: :knowledge_session_lists
@@ -52,6 +54,24 @@ class KnowledgeSession < ApplicationRecord
     EVENT_IDS.key(event_id)&.to_s || event_id
   end
 
+  # Get the URL to the session on knowledge.servicenow.com
+  def knowledge_url
+    return nil unless session_id.present?
+
+    year = case event_id
+    when "k20" then "k20"
+    when "k21" then "k21"
+    when "k22" then "k22"
+    when "16590311612800012k23" then "k23"
+    when "1692646803067001xk24" then "k24"
+    when "1724429920965001dk25" then "k25"
+    when "1754425456386001bk26" then "k26"
+    else return nil
+    end
+
+    "https://knowledge.servicenow.com/flow/servicenow/#{year}/sessions/page/sessions/session/#{session_id}"
+  end
+
   # JSON array fields
   def participants_array
     JSON.parse(participants || "[]")
@@ -68,4 +88,14 @@ class KnowledgeSession < ApplicationRecord
   # Aliases for backward compatibility
   alias_method :participants_list, :participants_array
   alias_method :times_list, :times_array
+
+  # Check if session is stale (not seen in API for 48+ hours)
+  def stale?
+    return false if last_seen_at.nil? # Never fetched, can't determine
+    last_seen_at < 48.hours.ago
+  end
+
+  # Scope for stale sessions
+  scope :stale, -> { where("last_seen_at < ?", 48.hours.ago) }
+  scope :active, -> { where("last_seen_at >= ? OR last_seen_at IS NULL", 48.hours.ago) }
 end

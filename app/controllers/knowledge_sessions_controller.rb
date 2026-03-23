@@ -94,7 +94,54 @@ class KnowledgeSessionsController < ApplicationController
       .sort
 
     @total_count = sessions.count
-    @sessions = sessions.order(:title_sort, :title)
+    @stale_count = sessions.stale.count
+    @active_count = @total_count - @stale_count
+
+    # Sort: active sessions first (by modified desc), then stale sessions (by modified desc)
+    # Using CASE to put stale sessions (last_seen_at < 48 hours ago) at the bottom
+    stale_threshold = 48.hours.ago
+    sessions = sessions.order(
+      Arel.sql("CASE WHEN last_seen_at < '#{stale_threshold.iso8601}' THEN 1 ELSE 0 END"),
+      modified: :desc
+    )
+
+    # Pagination
+    @per_page = params[:all] == "1" ? @total_count : 50
+    @page = (params[:page] || 1).to_i
+    @page = 1 if @page < 1
+    @total_pages = (@total_count.to_f / @per_page).ceil
+    @page = @total_pages if @page > @total_pages && @total_pages > 0
+
+    @sessions = sessions.offset((@page - 1) * @per_page).limit(@per_page)
+    @showing_all = params[:all] == "1"
+  end
+
+  def hide_speaker
+    return head :forbidden unless admin?
+
+    session = KnowledgeSession.find(params[:id])
+    ksp = session.knowledge_session_participants.find_by(participant_id: params[:participant_id])
+
+    if ksp
+      ksp.update!(hidden: true)
+      redirect_back fallback_location: k26_path, notice: "Speaker hidden from session."
+    else
+      redirect_back fallback_location: k26_path, alert: "Speaker not found."
+    end
+  end
+
+  def unhide_speaker
+    return head :forbidden unless admin?
+
+    session = KnowledgeSession.find(params[:id])
+    ksp = session.knowledge_session_participants.find_by(participant_id: params[:participant_id])
+
+    if ksp
+      ksp.update!(hidden: false)
+      redirect_back fallback_location: k26_path, notice: "Speaker restored to session."
+    else
+      redirect_back fallback_location: k26_path, alert: "Speaker not found."
+    end
   end
 
   private

@@ -1,6 +1,6 @@
 module Admin
   class KnowledgeSessionsController < BaseController
-    before_action :set_session, only: %i[show edit update destroy]
+    before_action :set_session, only: %i[show edit update destroy remove_speaker]
 
     def index
       @sessions = KnowledgeSession.all
@@ -20,6 +20,7 @@ module Admin
     end
 
     def show
+      @speakers = @session.speakers.order(:name)
     end
 
     def new
@@ -49,6 +50,17 @@ module Admin
     def destroy
       @session.destroy
       redirect_to admin_knowledge_sessions_path, notice: "Session deleted."
+    end
+
+    def remove_speaker
+      ksp = @session.knowledge_session_participants.find_by(participant_id: params[:participant_id])
+      if ksp
+        participant_name = ksp.participant.name
+        ksp.destroy
+        redirect_to admin_knowledge_session_path(@session), notice: "Removed #{participant_name} from session."
+      else
+        redirect_to admin_knowledge_session_path(@session), alert: "Speaker not found."
+      end
     end
 
     private

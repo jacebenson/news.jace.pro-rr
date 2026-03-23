@@ -4,7 +4,9 @@
   <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-900"><%= @event_name %></h1>
-      <p class="text-gray-600"><%= @total_count %> sessions</p>
+      <p class="text-gray-600">
+        <%= @active_count %> active sessions<% if @stale_count > 0 %>, <span class="text-amber-600"><%= @stale_count %> cancelled</span><% end %>
+      </p>
     </div>
 
     <div class="flex items-center gap-4">
@@ -24,12 +26,16 @@
     </div>
   </div>
 
-  <%# Navigation tabs - Parties / All Sessions %>
+  <%# Navigation tabs - Parties / All Sessions / Expo Map %>
   <div class="mb-4 flex flex-wrap gap-2">
     <%= link_to "Parties", send("#{@event}_path", tags: "party"),
         class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags == 'party' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <%= link_to "All Sessions", send("#{@event}_path"),
         class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <% if @event == "k26" %>
+      <%= link_to "Expo Map ↗", "https://knowledge26.expofp.com", target: "_blank", rel: "noopener",
+          class: "px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+    <% end %>
   </div>
 
   <%# Filters %>
@@ -55,7 +61,7 @@
     </label>
 
     <span class="text-sm text-gray-500">
-      <%= @total_count %> sessions
+      <%= @active_count %> active<% if @stale_count > 0 %>, <span class="text-amber-600"><%= @stale_count %> cancelled</span><% end %>
     </span>
   <% end %>
 
@@ -104,5 +110,64 @@
     </div>
   <% end %>
 
+  <%# Pagination %>
+  <% if @total_pages > 1 || @showing_all %>
+    <% pagination_params = params.permit(:search, :company, :exclude_servicenow, :tags, :list).to_h.symbolize_keys %>
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t pt-4">
+      <div class="text-sm text-gray-600">
+        <% if @showing_all %>
+          Showing all <%= @total_count %> sessions
+        <% else %>
+          Showing <%= (@page - 1) * @per_page + 1 %>–<%= [(@page * @per_page), @total_count].min %> of <%= @total_count %> sessions
+        <% end %>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <% if @showing_all %>
+          <%= link_to "Paginate", send("#{@event}_path", pagination_params.merge(page: 1)),
+              class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+        <% else %>
+          <%# Previous page %>
+          <% if @page > 1 %>
+            <%= link_to "← Prev", send("#{@event}_path", pagination_params.merge(page: @page - 1)),
+                class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+          <% end %>
+
+          <%# Page numbers %>
+          <% pages_to_show = ([@page - 2, 1].max..[@page + 2, @total_pages].min) %>
+          <% if pages_to_show.first > 1 %>
+            <%= link_to "1", send("#{@event}_path", pagination_params.merge(page: 1)),
+                class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+            <% if pages_to_show.first > 2 %><span class="text-gray-400">…</span><% end %>
+          <% end %>
+
+          <% pages_to_show.each do |p| %>
+            <% if p == @page %>
+              <span class="px-3 py-1 text-sm rounded bg-blue-600 text-white"><%= p %></span>
+            <% else %>
+              <%= link_to p, send("#{@event}_path", pagination_params.merge(page: p)),
+                  class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+            <% end %>
+          <% end %>
+
+          <% if pages_to_show.last < @total_pages %>
+            <% if pages_to_show.last < @total_pages - 1 %><span class="text-gray-400">…</span><% end %>
+            <%= link_to @total_pages, send("#{@event}_path", pagination_params.merge(page: @total_pages)),
+                class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+          <% end %>
+
+          <%# Next page %>
+          <% if @page < @total_pages %>
+            <%= link_to "Next →", send("#{@event}_path", pagination_params.merge(page: @page + 1)),
+                class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+          <% end %>
+
+          <%# Show all link %>
+          <%= link_to "Show All", send("#{@event}_path", pagination_params.merge(all: 1)),
+              class: "ml-2 px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 
 </div>

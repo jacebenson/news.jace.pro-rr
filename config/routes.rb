@@ -62,6 +62,8 @@ Rails.application.routes.draw do
     get "#{event}/tags/:tags/:filter", to: "knowledge_sessions#index", defaults: { event: event }, as: "#{event}_tags_filter".to_sym
     get "#{event}/tags/:tags/search/:search", to: "knowledge_sessions#index", defaults: { event: event }, as: "#{event}_tags_search".to_sym
   end
+  post "knowledge_sessions/:id/hide_speaker/:participant_id", to: "knowledge_sessions#hide_speaker", as: :hide_session_speaker
+  post "knowledge_sessions/:id/unhide_speaker/:participant_id", to: "knowledge_sessions#unhide_speaker", as: :unhide_session_speaker
 
   # Account (authenticated)
   get "account", to: "accounts#show"
@@ -88,7 +90,11 @@ Rails.application.routes.draw do
     end
     resources :news_feeds
     resources :news_items
-    resources :knowledge_sessions
+    resources :knowledge_sessions do
+      member do
+        delete "speakers/:participant_id", to: "knowledge_sessions#remove_speaker", as: :remove_speaker
+      end
+    end
     resources :store_apps, controller: "servicenow_store_apps" do
       member do
         post :refresh

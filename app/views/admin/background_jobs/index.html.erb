@@ -73,6 +73,20 @@
       </div>
     </div>
 
+    <%# Knowledge Sessions %>
+    <div>
+      <h3 class="text-sm font-medium text-gray-500 mb-3">Knowledge Conference</h3>
+      <div class="space-y-2">
+        <%= render "job_row",
+            job_key: "fetch_knowledge_sessions",
+            job_class: "FetchKnowledgeSessionsJob",
+            label: "Fetch K26 Sessions",
+            description: "Rainfocus API - sessions & speakers",
+            color: "indigo",
+            next_run: @next_runs["FetchKnowledgeSessionsJob"] %>
+      </div>
+    </div>
+
     <%# SEC Filings %>
     <div>
       <h3 class="text-sm font-medium text-gray-500 mb-3">SEC Filings</h3>
