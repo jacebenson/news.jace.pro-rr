@@ -124,9 +124,28 @@
 
       <% times = ksession.times_array %>
       <% if times.any? %>
-        <div class="mt-3 text-xs text-gray-500">
-          <% times.first(2).each do |time| %>
-            <span class="mr-3"><%= time["start"] %></span>
+        <div class="mt-3 space-y-1">
+          <% times.each do |time| %>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <span class="font-medium"><%= time["dateFormatted"] || time["date"] %></span>
+              <span class="text-gray-400">·</span>
+              <span><%= time["startTimeFormatted"] %> – <%= time["endTimeFormatted"] %></span>
+              <% if time["length"].present? %>
+                <span class="text-xs text-gray-400">(<%= time["length"] %>)</span>
+              <% end %>
+            </div>
+            <% if time["room"].present? %>
+              <div class="flex items-center gap-2 text-sm text-gray-500 ml-6">
+                <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span><%= time["room"] %></span>
+              </div>
+            <% end %>
           <% end %>
         </div>
       <% end %>
