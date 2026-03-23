@@ -133,10 +133,10 @@ class KnowledgeSessionsController < ApplicationController
     when "alpha"
       sessions.order(:title_sort)
     when "time"
-      # Sort by first event start date/time - need to extract from JSON
+      # Sort by first event start date/time - handle null/empty times gracefully
       sessions.order(
-        Arel.sql("COALESCE(JSON_EXTRACT(times, '$[0].date'), '9999-99-99') ASC"),
-        Arel.sql("COALESCE(JSON_EXTRACT(times, '$[0].startTimeFormatted'), '99:99') ASC")
+        Arel.sql("CASE WHEN times IS NULL OR times = '' OR times = '[]' THEN '9999-99-99' ELSE COALESCE(JSON_EXTRACT(times, '$[0].date'), '9999-99-99') END ASC"),
+        Arel.sql("CASE WHEN times IS NULL OR times = '' OR times = '[]' THEN '99:99' ELSE COALESCE(JSON_EXTRACT(times, '$[0].startTimeFormatted'), '99:99') END ASC")
       )
     else
       # Default: active sessions first (by modified desc), then stale sessions
