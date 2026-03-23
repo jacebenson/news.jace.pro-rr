@@ -123,13 +123,28 @@ class KnowledgeSessionsController < ApplicationController
     @stale_count = sessions.stale.count
     @active_count = @total_count - @stale_count
 
-    # Sort: active sessions first (by modified desc), then stale sessions (by modified desc)
-    # Using CASE to put stale sessions (last_seen_at < 48 hours ago) at the bottom
+    # Sorting
+    @sort = params[:sort].presence || "default"
     stale_threshold = 48.hours.ago
-    sessions = sessions.order(
-      Arel.sql("CASE WHEN last_seen_at < '#{stale_threshold.iso8601}' THEN 1 ELSE 0 END"),
-      modified: :desc
-    )
+
+    sessions = case @sort
+    when "updated"
+      sessions.order(modified: :desc)
+    when "alpha"
+      sessions.order(:title_sort)
+    when "time"
+      # Sort by first event start date/time - need to extract from JSON
+      sessions.order(
+        Arel.sql("COALESCE(JSON_EXTRACT(times, '$[0].date'), '9999-99-99') ASC"),
+        Arel.sql("COALESCE(JSON_EXTRACT(times, '$[0].startTimeFormatted'), '99:99') ASC")
+      )
+    else
+      # Default: active sessions first (by modified desc), then stale sessions
+      sessions.order(
+        Arel.sql("CASE WHEN last_seen_at < '#{stale_threshold.iso8601}' THEN 1 ELSE 0 END"),
+        modified: :desc
+      )
+    end
 
     # Pagination
     @per_page = params[:all] == "1" ? @total_count : 50

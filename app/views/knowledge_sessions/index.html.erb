@@ -50,6 +50,19 @@
     <% end %>
 
     <div class="flex items-center gap-2">
+      <label for="sort" class="text-sm font-medium text-gray-700">Sort:</label>
+      <%= select_tag :sort,
+          options_for_select([
+            ["Active First", "default"],
+            ["Last Updated", "updated"],
+            ["A-Z", "alpha"],
+            ["Start Time", "time"]
+          ], @sort),
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+          onchange: "this.form.submit()" %>
+    </div>
+
+    <div class="flex items-center gap-2">
       <label for="venue" class="text-sm font-medium text-gray-700">Venue:</label>
       <%= select_tag :venue,
           options_for_select([["All Venues", ""]] + @all_venues.map { |v| [v, v] }, @venue_filter),
@@ -132,7 +145,7 @@
 
   <%# Pagination %>
   <% if @total_pages > 1 || @showing_all %>
-    <% pagination_params = params.permit(:search, :company, :exclude_servicenow, :tags, :list, :venue, :room).to_h.symbolize_keys %>
+    <% pagination_params = params.permit(:search, :company, :exclude_servicenow, :tags, :list, :venue, :room, :sort).to_h.symbolize_keys %>
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t pt-4">
       <div class="text-sm text-gray-600">
         <% if @showing_all %>
