@@ -76,7 +76,7 @@ module Admin
 
     def session_params
       params.require(:knowledge_session).permit(:title, :abstract, :code, :session_id,
-                                                :event_id, :recording_url, :url, :times)
+                                                :event_id, :recording_url, :url, :times, :last_seen_at)
     end
   end
 end
