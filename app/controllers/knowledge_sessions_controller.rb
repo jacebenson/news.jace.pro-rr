@@ -88,6 +88,27 @@ class KnowledgeSessionsController < ApplicationController
       sessions = sessions.where.not(id: servicenow_only_ids) if servicenow_only_ids.any?
     end
 
+    # Venue filter (Expo, Venetian, Wynn)
+    if params[:venue].present?
+      @venue_filter = params[:venue]
+      sessions = sessions.where("times LIKE ?", "%#{sanitize_sql_like(@venue_filter)} -%")
+    end
+
+    # Room filter (specific room within venue)
+    if params[:room].present?
+      @room_filter = params[:room]
+      sessions = sessions.where("times LIKE ?", "%\"room\":\"#{sanitize_sql_like(@room_filter)}\"%")
+    end
+
+    # Get all unique venues and rooms for filter dropdowns
+    all_rooms = extract_rooms_from_sessions(KnowledgeSession.for_event(@event))
+    @all_venues = all_rooms.map { |r| r.split(" - ").first }.uniq.sort
+    @all_rooms = if @venue_filter.present?
+      all_rooms.select { |r| r.start_with?("#{@venue_filter} -") }.sort
+    else
+      all_rooms.sort
+    end
+
     # Get all unique companies for the filter dropdown (before pagination)
     @all_companies = Participant
       .joins(:knowledge_session_participants)
@@ -190,6 +211,15 @@ class KnowledgeSessionsController < ApplicationController
 
     # ServiceNow-only = has speakers but no non-ServiceNow speakers
     sessions_with_speakers - sessions_with_non_sn
+  end
+
+  # Extract unique room names from sessions' times JSON
+  def extract_rooms_from_sessions(sessions)
+    sessions.where.not(times: [ nil, "", "[]" ]).pluck(:times).flat_map do |times_json|
+      JSON.parse(times_json).map { |t| t["room"] }
+    rescue JSON::ParserError
+      []
+    end.compact.uniq
   end
 
   def set_event_path_helper
