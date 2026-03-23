@@ -70,6 +70,14 @@
             description: "Links participants to companies by name",
             color: "orange",
             next_run: @next_runs["LinkParticipantsJob"] %>
+        
+        <%= render "job_row",
+            job_key: "migrate_participant_images",
+            job_class: "MigrateParticipantImagesToS3Job",
+            label: "Migrate Speaker Images",
+            description: "Upload speaker photos to S3",
+            color: "cyan",
+            next_run: @next_runs["MigrateParticipantImagesToS3Job"] %>
       </div>
     </div>
 
