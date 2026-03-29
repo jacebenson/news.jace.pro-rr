@@ -46,11 +46,11 @@ class KnowledgeSessionsController < ApplicationController
 
       if matching_speaker_session_ids.any?
         sessions = sessions.where(
-          "title LIKE ? OR abstract LIKE ? OR code LIKE ? OR knowledge_sessions.id IN (?)",
+          "knowledge_sessions.title LIKE ? OR knowledge_sessions.abstract LIKE ? OR knowledge_sessions.code LIKE ? OR knowledge_sessions.id IN (?)",
           search_term, search_term, search_term, matching_speaker_session_ids
         )
       else
-        sessions = sessions.where("title LIKE ? OR abstract LIKE ? OR code LIKE ?",
+        sessions = sessions.where("knowledge_sessions.title LIKE ? OR knowledge_sessions.abstract LIKE ? OR knowledge_sessions.code LIKE ?",
                                   search_term, search_term, search_term)
       end
     end
@@ -60,11 +60,11 @@ class KnowledgeSessionsController < ApplicationController
       @tags = params[:tags]
       if @tags == "party"
         # Special handling for parties - look for PARTY code prefix
-        sessions = sessions.where("code LIKE ?", "PARTY%")
+        sessions = sessions.where("knowledge_sessions.code LIKE ?", "PARTY%")
       else
         safe_tags = sanitize_sql_like(@tags)
         tag_term = "%#{safe_tags}%"
-        sessions = sessions.where("title LIKE ? OR abstract LIKE ?", tag_term, tag_term)
+        sessions = sessions.where("knowledge_sessions.title LIKE ? OR knowledge_sessions.abstract LIKE ?", tag_term, tag_term)
       end
     end
 
