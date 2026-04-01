@@ -1,4 +1,7 @@
 class KnowledgeSession < ApplicationRecord
+  # Normalize blank session_id to nil to avoid unique constraint violations
+  before_validation :normalize_session_id
+
   has_many :knowledge_session_participants, dependent: :destroy
   has_many :speakers, -> { where(knowledge_session_participants: { hidden: false }) },
            through: :knowledge_session_participants, source: :participant
@@ -98,4 +101,13 @@ class KnowledgeSession < ApplicationRecord
   # Scope for stale sessions
   scope :stale, -> { where("last_seen_at < ?", 48.hours.ago) }
   scope :active, -> { where("last_seen_at >= ? OR last_seen_at IS NULL", 48.hours.ago) }
+
+  private
+
+  def normalize_session_id
+    if session_id.blank?
+      # Auto-generate ISO timestamp as session_id for manually created sessions
+      self.session_id = "manual-#{Time.current.utc.iso8601}"
+    end
+  end
 end
