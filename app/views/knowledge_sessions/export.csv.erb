@@ -1,7 +1,7 @@
 <% require 'csv' -%>
 <%= CSV.generate do |csv|
   # Header row
-  csv << ['Title', 'Code', 'Link', 'Description', 'Speakers', 'Speaker Companies', 'Date/Time', 'Location']
+  csv << ['Title', 'Code', 'Link', 'Description', 'Speakers', 'Speaker Companies', 'Day', 'Start', 'End', 'Location']
 
   @sessions.each do |session|
     # Get speaker information
@@ -14,10 +14,27 @@
     if times.any?
       # Create a row for each time slot
       times.each do |time|
-        date_time = ""
-        date_time << (time['dateFormatted'] || time['date']).to_s if time['dateFormatted'] || time['date']
-        date_time << " · " if date_time.present? && (time['startTimeFormatted'] || time['endTimeFormatted'])
-        date_time << "#{time['startTimeFormatted']} – #{time['endTimeFormatted']}" if time['startTimeFormatted'] || time['endTimeFormatted']
+        # Parse and format day like "Mon May 5"
+        day = ""
+        if time['dateFormatted'].present?
+          begin
+            parsed_date = Date.parse(time['dateFormatted'].to_s)
+            day = parsed_date.strftime("%a %b %-d")
+          rescue
+            day = time['dateFormatted'].to_s
+          end
+        elsif time['date'].present?
+          begin
+            parsed_date = Date.parse(time['date'].to_s)
+            day = parsed_date.strftime("%a %b %-d")
+          rescue
+            day = time['date'].to_s
+          end
+        end
+
+        # Extract start and end times
+        start_time = time['startTimeFormatted'].to_s
+        end_time = time['endTimeFormatted'].to_s
 
         location = time['room'].to_s
 
@@ -28,7 +45,9 @@
           session.abstract,
           speakers,
           speaker_companies,
-          date_time,
+          day,
+          start_time,
+          end_time,
           location
         ]
       end
@@ -41,6 +60,8 @@
         session.abstract,
         speakers,
         speaker_companies,
+        '',
+        '',
         '',
         ''
       ]
