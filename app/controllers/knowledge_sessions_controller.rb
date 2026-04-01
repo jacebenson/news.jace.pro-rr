@@ -185,6 +185,72 @@ class KnowledgeSessionsController < ApplicationController
     end
   end
 
+  def export
+    @event = params[:event] || "k26"
+    @event_name = event_name(@event)
+
+    @sessions = KnowledgeSession.for_event(@event).includes(:speakers)
+
+    # Apply the same filters as index action
+    if params[:search].present?
+      @search = params[:search]
+      safe_search = sanitize_sql_like(@search)
+      search_term = "%#{safe_search}%"
+
+      matching_speaker_session_ids = KnowledgeSessionParticipant
+        .joins(:participant)
+        .where("participants.name LIKE ?", search_term)
+        .pluck(:knowledge_session_id)
+
+      if matching_speaker_session_ids.any?
+        @sessions = @sessions.where(
+          "knowledge_sessions.title LIKE ? OR knowledge_sessions.abstract LIKE ? OR knowledge_sessions.code LIKE ? OR knowledge_sessions.id IN (?)",
+          search_term, search_term, search_term, matching_speaker_session_ids
+        )
+      else
+        @sessions = @sessions.where("knowledge_sessions.title LIKE ? OR knowledge_sessions.abstract LIKE ? OR knowledge_sessions.code LIKE ?",
+                                  search_term, search_term, search_term)
+      end
+    end
+
+    if params[:company].present?
+      @company_filter = params[:company]
+      safe_company = sanitize_sql_like(@company_filter)
+      company_term = "%#{safe_company}%"
+      session_ids_with_company = KnowledgeSessionParticipant
+        .joins(:participant)
+        .where("participants.company_name LIKE ?", company_term)
+        .pluck(:knowledge_session_id)
+      @sessions = @sessions.where(id: session_ids_with_company)
+    end
+
+    if params[:exclude_servicenow] == "1"
+      @exclude_servicenow = true
+      servicenow_only_ids = find_servicenow_only_session_ids(@sessions)
+      @sessions = @sessions.where.not(id: servicenow_only_ids) if servicenow_only_ids.any?
+    end
+
+    if params[:venue].present?
+      @venue_filter = params[:venue]
+      @sessions = @sessions.where("times LIKE ?", "%#{sanitize_sql_like(@venue_filter)} -%")
+    end
+
+    if params[:room].present?
+      @room_filter = params[:room]
+      @sessions = @sessions.where("times LIKE ?", "%\"room\":\"#{sanitize_sql_like(@room_filter)}\"%")
+    end
+
+    # Sort by title for consistent export
+    @sessions = @sessions.order(:title_sort)
+
+    respond_to do |format|
+      format.csv do
+        headers["Content-Disposition"] = "attachment; filename=\"#{@event}_sessions_#{Date.current}.csv\""
+        headers["Content-Type"] = "text/csv"
+      end
+    end
+  end
+
   private
 
   def event_name(event)
