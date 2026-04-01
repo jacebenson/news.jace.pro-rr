@@ -1,0 +1,49 @@
+<% require 'csv' -%>
+<%= CSV.generate do |csv|
+  # Header row
+  csv << ['Title', 'Code', 'Link', 'Description', 'Speakers', 'Speaker Companies', 'Date/Time', 'Location']
+
+  @sessions.each do |session|
+    # Get speaker information
+    speakers = session.speakers.map(&:name).join(', ')
+    speaker_companies = session.speakers.map(&:company_name).compact.reject(&:blank?).uniq.join(', ')
+
+    # Get times array
+    times = session.times_array
+
+    if times.any?
+      # Create a row for each time slot
+      times.each do |time|
+        date_time = ""
+        date_time << (time['dateFormatted'] || time['date']).to_s if time['dateFormatted'] || time['date']
+        date_time << " · " if date_time.present? && (time['startTimeFormatted'] || time['endTimeFormatted'])
+        date_time << "#{time['startTimeFormatted']} – #{time['endTimeFormatted']}" if time['startTimeFormatted'] || time['endTimeFormatted']
+
+        location = time['room'].to_s
+
+        csv << [
+          session.title,
+          session.code,
+          session.knowledge_url || session.url,
+          session.abstract,
+          speakers,
+          speaker_companies,
+          date_time,
+          location
+        ]
+      end
+    else
+      # No times - still output a row
+      csv << [
+        session.title,
+        session.code,
+        session.knowledge_url || session.url,
+        session.abstract,
+        speakers,
+        speaker_companies,
+        '',
+        ''
+      ]
+    end
+  end
+end.html_safe -%>
