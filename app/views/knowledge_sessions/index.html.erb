@@ -60,6 +60,11 @@
       <%= hidden_field_tag :search, @search %>
     <% end %>
 
+    <%# Preserve tags filter if present %>
+    <% if @tags.present? %>
+      <%= hidden_field_tag :tags, @tags %>
+    <% end %>
+
     <div class="flex items-center gap-2">
       <label for="sort" class="text-sm font-medium text-gray-700">Sort:</label>
       <%= select_tag :sort,

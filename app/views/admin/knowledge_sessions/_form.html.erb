@@ -39,10 +39,39 @@
       <p class="mt-1 text-xs text-gray-500">Link to registration page or event details</p>
     </div>
 
-    <div>
-      <%= f.label :times, "Date/Time/Location (JSON)", class: "block text-sm font-medium text-gray-700" %>
-      <%= f.text_area :times, rows: 3, placeholder: '[{"date":"2026-05-05","startTimeFormatted":"5:00 PM","endTimeFormatted":"7:30 PM","room":"Venue Name"}]', class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm font-mono text-sm" %>
-      <p class="mt-1 text-xs text-gray-500">JSON array with date, startTimeFormatted, endTimeFormatted, room</p>
+    <div class="border-t border-gray-200 pt-4 mt-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-medium text-gray-900">Date, Time & Location</h3>
+        <button type="button" onclick="addTimeSlot()" class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+          + Add Time Slot
+        </button>
+      </div>
+
+      <div id="time-slots-container" class="space-y-3">
+        <%# Time slots will be rendered here by JavaScript %>
+      </div>
+
+      <%= f.hidden_field :times, id: "times-json" %>
+
+      <p class="mt-2 text-xs text-gray-500">Add one or more time slots for this event</p>
+
+      <%# Raw JSON Preview/Edit %>
+      <div class="mt-4 pt-4 border-t border-gray-200">
+        <button type="button" onclick="toggleRawJson()" class="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+          <span id="raw-json-toggle">Show Raw JSON</span>
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="raw-json-container" class="hidden mt-2">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Raw JSON (edit at your own risk)</label>
+          <div id="json-error-message" class="hidden mb-2 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200"></div>
+          <textarea id="raw-json-editor" rows="4" 
+                    class="w-full rounded-md border-gray-300 shadow-sm font-mono text-xs"
+                    onchange="updateFromRawJson()"></textarea>
+          <p class="mt-1 text-xs text-gray-400">Changes here will update the form fields above</p>
+        </div>
+      </div>
     </div>
 
     <div>
@@ -79,3 +108,267 @@
     </div>
   </div>
 <% end %>
+
+<script>
+// These will be initialized after DOM is ready
+let timeSlots = [];
+let rawJsonValue = '';
+let hasJsonError = false;
+
+function initializeTimeSlots() {
+  try {
+    const timesInput = document.getElementById('times-json');
+    const existingTimes = timesInput ? timesInput.value : '';
+    rawJsonValue = existingTimes || '';
+    if (existingTimes) {
+      timeSlots = JSON.parse(existingTimes);
+      hasJsonError = false;
+    }
+  } catch (e) {
+    console.error('Failed to parse existing times:', e);
+    hasJsonError = true;
+    // Keep rawJsonValue for display, start with empty slots
+    timeSlots = [];
+  }
+
+  // If no slots exist (and no error), add one empty slot
+  if (timeSlots.length === 0 && !hasJsonError) {
+    timeSlots.push({ date: '', startTimeFormatted: '', endTimeFormatted: '', room: '' });
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}`;
+}
+
+// Convert 12-hour time (e.g., "5:00 PM") to 24-hour time (e.g., "17:00") for time input
+function timeTo24Hour(time12) {
+  if (!time12) return '';
+  const match = time12.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return '';
+  
+  let [_, hours, minutes, period] = match;
+  hours = parseInt(hours, 10);
+  
+  if (period.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
+// Convert 24-hour time (e.g., "17:00") to 12-hour time (e.g., "5:00 PM") for storage
+function formatTime12Hour(time24) {
+  if (!time24) return '';
+  const [hours24, minutes] = time24.split(':');
+  let hours = parseInt(hours24, 10);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  
+  if (hours > 12) {
+    hours -= 12;
+  } else if (hours === 0) {
+    hours = 12;
+  }
+  
+  return `${hours}:${minutes} ${period}`;
+}
+
+function renderTimeSlots() {
+  const container = document.getElementById('time-slots-container');
+  container.innerHTML = timeSlots.map((slot, index) => `
+    <div class="time-slot p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-3">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Date</label>
+          <input type="date" 
+                 class="time-date w-full rounded-md border-gray-300 shadow-sm text-sm"
+                 value="${slot.date || ''}"
+                 onchange="updateTimeSlot(${index}, 'date', this.value)">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Start Time</label>
+          <input type="time"
+                 class="time-start w-full rounded-md border-gray-300 shadow-sm text-sm"
+                 value="${timeTo24Hour(slot.startTimeFormatted) || ''}"
+                 onchange="updateTimeSlot(${index}, 'startTimeFormatted', formatTime12Hour(this.value))">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-gray-700 mb-1">End Time</label>
+          <input type="time"
+                 class="time-end w-full rounded-md border-gray-300 shadow-sm text-sm"
+                 value="${timeTo24Hour(slot.endTimeFormatted) || ''}"
+                 onchange="updateTimeSlot(${index}, 'endTimeFormatted', formatTime12Hour(this.value))">
+        </div>
+        <div class="col-span-4">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Location/Room</label>
+          <input type="text"
+                 class="time-room w-full rounded-md border-gray-300 shadow-sm text-sm"
+                 placeholder="Venue Name"
+                 value="${slot.room || ''}"
+                 onchange="updateTimeSlot(${index}, 'room', this.value)">
+        </div>
+        <div class="col-span-1 flex items-end">
+          <button type="button" 
+                  onclick="removeTimeSlot(${index})"
+                  class="w-full px-2 py-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                  ${timeSlots.length === 1 ? 'disabled' : ''}>
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  updateTimesJson();
+}
+
+function updateTimeSlot(index, field, value) {
+  // Clear error state when user edits form fields - they want to use the form
+  if (hasJsonError) {
+    hasJsonError = false;
+    // Keep one empty slot if we had none
+    if (timeSlots.length === 0) {
+      timeSlots.push({ date: '', startTimeFormatted: '', endTimeFormatted: '', room: '' });
+    }
+  }
+  
+  timeSlots[index][field] = value;
+  // Auto-generate dateFormatted when date changes
+  if (field === 'date') {
+    timeSlots[index].dateFormatted = formatDate(value);
+  }
+  updateTimesJson();
+}
+
+function addTimeSlot() {
+  // Clear error state when user adds a slot - they want to use the form
+  if (hasJsonError) {
+    hasJsonError = false;
+    timeSlots = []; // Clear any partial data from failed parse
+  }
+  timeSlots.push({ date: '', startTimeFormatted: '', endTimeFormatted: '', room: '' });
+  renderTimeSlots();
+}
+
+function removeTimeSlot(index) {
+  if (timeSlots.length > 1) {
+    timeSlots.splice(index, 1);
+    renderTimeSlots();
+  }
+}
+
+function updateTimesJson() {
+  // Filter out completely empty slots
+  const validSlots = timeSlots.filter(slot => 
+    slot.date || slot.startTimeFormatted || slot.endTimeFormatted || slot.room
+  );
+  
+  // Only update hidden field if we don't have a parse error
+  // (user needs to fix raw JSON first)
+  if (!hasJsonError) {
+    document.getElementById('times-json').value = JSON.stringify(validSlots);
+  }
+  
+  // Update raw JSON editor if it exists
+  const rawEditor = document.getElementById('raw-json-editor');
+  if (rawEditor) {
+    if (hasJsonError) {
+      // Show the invalid JSON with error indicator
+      rawEditor.value = rawJsonValue;
+      rawEditor.classList.add('border-red-500', 'bg-red-50');
+    } else {
+      rawEditor.value = JSON.stringify(validSlots, null, 2);
+      rawEditor.classList.remove('border-red-500', 'bg-red-50');
+    }
+  }
+}
+
+function toggleRawJson() {
+  const container = document.getElementById('raw-json-container');
+  const toggleText = document.getElementById('raw-json-toggle');
+  
+  if (container.classList.contains('hidden')) {
+    container.classList.remove('hidden');
+    toggleText.textContent = 'Hide Raw JSON';
+    
+    // Always set the textarea value directly when showing
+    const rawEditor = document.getElementById('raw-json-editor');
+    const errorMsg = document.getElementById('json-error-message');
+    
+    if (rawEditor) {
+      if (hasJsonError) {
+        rawEditor.value = rawJsonValue;
+        rawEditor.classList.add('border-red-500', 'bg-red-50');
+      } else {
+        const validSlots = timeSlots.filter(slot => 
+          slot.date || slot.startTimeFormatted || slot.endTimeFormatted || slot.room
+        );
+        rawEditor.value = JSON.stringify(validSlots, null, 2);
+        rawEditor.classList.remove('border-red-500', 'bg-red-50');
+      }
+    }
+    
+    // Show error message if JSON was invalid
+    if (errorMsg) {
+      if (hasJsonError) {
+        errorMsg.textContent = 'Invalid JSON in database - fix required before saving';
+        errorMsg.style.display = 'block';
+      } else {
+        errorMsg.style.display = 'none';
+      }
+    }
+  } else {
+    container.classList.add('hidden');
+    toggleText.textContent = 'Show Raw JSON';
+  }
+}
+
+function updateFromRawJson() {
+  const rawEditor = document.getElementById('raw-json-editor');
+  const errorMsg = document.getElementById('json-error-message');
+  
+  try {
+    const parsed = JSON.parse(rawEditor.value);
+    if (Array.isArray(parsed)) {
+      timeSlots = parsed;
+      hasJsonError = false;
+      rawJsonValue = rawEditor.value;
+      
+      // Ensure at least one slot
+      if (timeSlots.length === 0) {
+        timeSlots.push({ date: '', startTimeFormatted: '', endTimeFormatted: '', room: '' });
+      }
+      
+      // Clear error styling
+      rawEditor.classList.remove('border-red-500', 'bg-red-50');
+      if (errorMsg) errorMsg.style.display = 'none';
+      
+      renderTimeSlots();
+    } else {
+      alert('JSON must be an array');
+    }
+  } catch (e) {
+    // Keep the error state, show error
+    hasJsonError = true;
+    rawJsonValue = rawEditor.value;
+    rawEditor.classList.add('border-red-500', 'bg-red-50');
+    if (errorMsg) {
+      errorMsg.textContent = 'Invalid JSON: ' + e.message;
+      errorMsg.style.display = 'block';
+    }
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initializeTimeSlots();
+  renderTimeSlots();
+});
+</script>

@@ -133,11 +133,21 @@ class KnowledgeSessionsController < ApplicationController
     when "alpha"
       sessions.order(:title_sort)
     when "time"
-      # Sort by first event start date/time - handle null/empty times gracefully
-      sessions.order(
-        Arel.sql("CASE WHEN times IS NULL OR times = '' OR times = '[]' THEN '9999-99-99' ELSE COALESCE(JSON_EXTRACT(times, '$[0].date'), '9999-99-99') END ASC"),
-        Arel.sql("CASE WHEN times IS NULL OR times = '' OR times = '[]' THEN '99:99' ELSE COALESCE(JSON_EXTRACT(times, '$[0].startTimeFormatted'), '99:99') END ASC")
-      )
+      # Sort by first event start date/time - handle null/empty/malformed times gracefully
+      # First, get all sessions and sort in Ruby to avoid JSON parsing errors in SQL
+      sessions = sessions.to_a.sort_by do |s|
+        begin
+          times = JSON.parse(s.times || "[]")
+          first = times.first || {}
+          date = first["date"] || "9999-99-99"
+          time = first["startTimeFormatted"] || "99:99"
+          [ date, time ]
+        rescue JSON::ParserError
+          [ "9999-99-99", "99:99" ]  # Invalid JSON sorts last
+        end
+      end
+      # Return as a relation-like array (pagination handles arrays too)
+      sessions
     else
       # Default: active sessions first (by modified desc), then stale sessions
       sessions.order(
@@ -153,7 +163,12 @@ class KnowledgeSessionsController < ApplicationController
     @total_pages = (@total_count.to_f / @per_page).ceil
     @page = @total_pages if @page > @total_pages && @total_pages > 0
 
-    @sessions = sessions.offset((@page - 1) * @per_page).limit(@per_page)
+    # Handle pagination - works with both Relations (most sorts) and Arrays (time sort)
+    if sessions.is_a?(Array)
+      @sessions = sessions.slice((@page - 1) * @per_page, @per_page) || []
+    else
+      @sessions = sessions.offset((@page - 1) * @per_page).limit(@per_page)
+    end
     @showing_all = params[:all] == "1"
   end
 

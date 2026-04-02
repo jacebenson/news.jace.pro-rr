@@ -75,6 +75,15 @@ class KnowledgeSession < ApplicationRecord
     "https://knowledge.servicenow.com/flow/servicenow/#{year}/sessions/page/sessions/session/#{session_id}"
   end
 
+  # Get the primary URL for this session
+  # For parties/social events: uses the event URL
+  # For regular sessions: uses the ServiceNow knowledge URL
+  def primary_url
+    # Priority: explicit event URL > knowledge URL
+    return url if url.present?
+    knowledge_url
+  end
+
   # JSON array fields
   def participants_array
     JSON.parse(participants || "[]")

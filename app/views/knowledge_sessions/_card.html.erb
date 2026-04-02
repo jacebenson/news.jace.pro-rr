@@ -15,8 +15,8 @@
 
     <div class="flex-1 min-w-0">
       <h3 class="font-semibold text-gray-900 text-lg">
-        <% if ksession.knowledge_url.present? %>
-          <%= link_to ksession.title, ksession.knowledge_url, target: "_blank", rel: "noopener", class: "hover:text-blue-600" %>
+        <% if ksession.primary_url.present? %>
+          <%= link_to ksession.title, ksession.primary_url, target: "_blank", rel: "noopener", class: "hover:text-blue-600" %>
         <% else %>
           <%= ksession.title %>
         <% end %>
@@ -144,6 +144,25 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <span><%= time["room"] %></span>
+                <% if ksession.code&.start_with?("PARTY") %>
+                  <% location_query = URI.encode_www_form_component(time["room"]) %>
+                  <%= link_to "🗺️", "https://www.google.com/maps/search/?api=1&query=#{location_query}", target: "_blank", rel: "noopener", class: "text-xs hover:underline ml-1", title: "Open in Google Maps" %>
+                  <%= link_to "🍎", "https://maps.apple.com/?q=#{location_query}", target: "_blank", rel: "noopener", class: "text-xs hover:underline", title: "Open in Apple Maps" %>
+                <% end %>
+              </div>
+            <% end %>
+            <%# Capacity/Seats information %>
+            <% if time["capacity"].present? && time["capacity"].to_i > 0 %>
+              <div class="flex items-center gap-2 text-xs text-gray-500 ml-6">
+                <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <% if time["seatsRemaining"].present? %>
+                  <% taken = time["capacity"].to_i - time["seatsRemaining"].to_i %>
+                  <span><%= taken %> / <%= time["capacity"] %> seats taken</span>
+                <% else %>
+                  <span><%= time["capacity"] %> seat capacity</span>
+                <% end %>
               </div>
             <% end %>
           <% end %>
