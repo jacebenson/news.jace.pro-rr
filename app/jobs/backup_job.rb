@@ -41,13 +41,14 @@ class BackupJob < ApplicationJob
       return { dry_run: true, backup_filename: backup_filename, db_path: db_path }
     end
 
-    # Check if backup already exists locally
+    # Remove existing backup if present (allows same-day re-runs)
     if File.exist?(backup_path)
-      Rails.logger.info "[BACKUP] Local backup already exists: #{backup_path}"
-    else
-      # Create backup using SQLite's .backup command
-      create_local_backup(db_path, backup_path)
+      Rails.logger.info "[BACKUP] Removing existing local backup: #{backup_path}"
+      File.delete(backup_path)
     end
+
+    # Create backup using SQLite's .backup command
+    create_local_backup(db_path, backup_path)
 
     return { error: "Local backup failed" } unless File.exist?(backup_path)
 
