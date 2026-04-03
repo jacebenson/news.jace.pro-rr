@@ -103,13 +103,14 @@ class KnowledgeSession < ApplicationRecord
 
   # Check if session is stale (not seen in API for 48+ hours)
   def stale?
+    return false if code&.start_with?("PARTY") # Parties are manual, never stale
     return false if last_seen_at.nil? # Never fetched, can't determine
     last_seen_at < 48.hours.ago
   end
 
-  # Scope for stale sessions
-  scope :stale, -> { where("last_seen_at < ?", 48.hours.ago) }
-  scope :active, -> { where("last_seen_at >= ? OR last_seen_at IS NULL", 48.hours.ago) }
+  # Scope for stale sessions (exclude parties - they're manual)
+  scope :stale, -> { where("last_seen_at < ?", 48.hours.ago).where.not("code LIKE 'PARTY%'") }
+  scope :active, -> { where("last_seen_at >= ? OR last_seen_at IS NULL OR code LIKE ?", 48.hours.ago, "PARTY%") }
 
   private
 

@@ -36,7 +36,6 @@ module Admin
 
     def create
       @session = KnowledgeSession.new(session_params)
-      @session.last_seen_at = Time.current  # Prevent showing as stale
       if @session.save
         redirect_to admin_knowledge_sessions_path, notice: "Session created."
       else
