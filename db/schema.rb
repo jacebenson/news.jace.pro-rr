@@ -11,29 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.0].define(version: 2026_03_23_192059) do
-  create_table "capability_product_store_apps", force: :cascade do |t|
-    t.integer "capability_product_id", null: false
-    t.integer "servicenow_store_app_id", null: false
-    t.text "notes"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["capability_product_id", "servicenow_store_app_id"], name: "idx_capability_store_app_unique", unique: true
-    t.index ["capability_product_id"], name: "index_capability_product_store_apps_on_capability_product_id"
-    t.index ["servicenow_store_app_id"], name: "index_capability_product_store_apps_on_servicenow_store_app_id"
-  end
-
-  create_table "capability_products", force: :cascade do |t|
-    t.string "category", null: false
-    t.string "name", null: false
-    t.text "description"
-    t.string "product_url"
-    t.json "tables", default: []
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["category", "name"], name: "index_capability_products_on_category_and_name", unique: true
-    t.index ["category"], name: "index_capability_products_on_category"
-  end
-
   create_table "companies", force: :cascade do |t|
     t.string "name"
     t.text "alias", default: "[]"
@@ -293,8 +270,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_23_192059) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
-  add_foreign_key "capability_product_store_apps", "capability_products"
-  add_foreign_key "capability_product_store_apps", "servicenow_store_apps"
   add_foreign_key "knowledge_session_lists", "knowledge_sessions"
   add_foreign_key "knowledge_session_lists", "users"
   add_foreign_key "knowledge_session_participants", "knowledge_sessions"

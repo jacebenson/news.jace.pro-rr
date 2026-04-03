@@ -68,6 +68,45 @@ class KnowledgeSessionsController < ApplicationController
       end
     end
 
+    # Session type filter - show only selected types (KEY, SNU, CCL, CCB, SES, SPN, etc.)
+    # If none selected, show all
+    if params[:session_types].present?
+      @session_types = params[:session_types].is_a?(Array) ? params[:session_types] : params[:session_types].split(",")
+      if @session_types.any?
+        # Build OR conditions for each session type prefix
+        conditions = @session_types.map { |type| "knowledge_sessions.code LIKE ?" }.join(" OR ")
+        values = @session_types.map { |type| "#{type}%" }
+        sessions = sessions.where(conditions, *values)
+      end
+    end
+
+    # Speaker special filters - MVP, SNAPP cards, acquisitions
+    if params[:speaker_filter].present?
+      @speaker_filter = params[:speaker_filter]
+      case @speaker_filter
+      when "mvp"
+        # Sessions with MVP speakers
+        session_ids_with_mvp = KnowledgeSessionParticipant
+          .joins(participant: :mvp_awards)
+          .pluck(:knowledge_session_id)
+        sessions = sessions.where(id: session_ids_with_mvp)
+      when "snapp"
+        # Sessions with SNAPP card holders
+        session_ids_with_snapp = KnowledgeSessionParticipant
+          .joins(participant: :snapp_cards)
+          .pluck(:knowledge_session_id)
+        sessions = sessions.where(id: session_ids_with_snapp)
+      when "acquisition"
+        # Sessions with speakers from acquisitions (non-ServiceNow companies)
+        acquisition_companies = [ "AirOne", "AppZen", "Atrinet", "Celonis", "Corelate", "Coveo", "Datalog", "Devoteam", "Digitate", "Gekkobrain", "Jellyfish", "Lightstep", "LinkLive", "Manta", "Mirror42", "Moogsoft", "Moveworks", "Nexthink", "Nobl9", "Pliant", "Puppet", "Raytion", "Rhinos", "Rundeck", "Sasquatch", "Swarm64", "Talonic", "Tasktop", "Tidal", "Ultimate", "Vianai", "Vicarious", "Wework", "Xmatters", "Yogi", "Zipcube" ]
+        session_ids_from_acquisitions = KnowledgeSessionParticipant
+          .joins(:participant)
+          .where.not(participants: { company_name: [ "ServiceNow", "ServiceNow Inc", nil, "" ] })
+          .pluck(:knowledge_session_id)
+        sessions = sessions.where(id: session_ids_from_acquisitions)
+      end
+    end
+
     # Company filter - filter sessions by speaker's company
     if params[:company].present?
       @company_filter = params[:company]
@@ -200,13 +239,32 @@ class KnowledgeSessionsController < ApplicationController
     end
   end
 
+  def toggle_list
+    return redirect_back(fallback_location: root_path, alert: "Please log in to save sessions.") unless logged_in?
+
+    @ksession = KnowledgeSession.find(params[:id])
+    list_entry = current_user.knowledge_session_lists.find_by(knowledge_session: @ksession)
+
+    if list_entry
+      list_entry.destroy
+      flash.now[:notice] = "Session removed from your list."
+    else
+      current_user.knowledge_session_lists.create!(knowledge_session: @ksession)
+      flash.now[:notice] = "Session added to your list."
+    end
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back(fallback_location: send("#{params[:event] || 'k26'}_path")) }
+    end
+  end
+
   def export
     @event = params[:event] || "k26"
     @event_name = event_name(@event)
 
     @sessions = KnowledgeSession.for_event(@event).includes(:speakers)
 
-    # Apply the same filters as index action
     if params[:search].present?
       @search = params[:search]
       safe_search = sanitize_sql_like(@search)

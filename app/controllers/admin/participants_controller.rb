@@ -1,6 +1,6 @@
 module Admin
   class ParticipantsController < BaseController
-    before_action :set_participant, only: %i[show edit update destroy merge compare]
+    before_action :set_participant, only: %i[show edit update destroy merge compare unlink_company find_company_match]
 
     def index
       @participants = Participant.includes(:company, :mvp_awards)
@@ -49,6 +49,50 @@ module Admin
       else
         @companies = Company.order(:name).pluck(:name, :id)
         render :edit, status: :unprocessable_entity
+      end
+    end
+
+    # POST /admin/participants/:id/unlink_company
+    # Removes company link but keeps company_name
+    def unlink_company
+      if @participant.company.present?
+        company_name = @participant.company.name
+        @participant.update!(company_id: nil)
+        redirect_back fallback_location: admin_participants_path,
+                      notice: "Unlinked from '#{company_name}'. company_name kept as '#{@participant.company_name}'"
+      else
+        redirect_back fallback_location: admin_participants_path,
+                      alert: "No company to unlink"
+      end
+    end
+
+    # POST /admin/participants/:id/find_company_match
+    # Auto-attempts to find and link a company matching company_name
+    def find_company_match
+      if @participant.company_name.blank?
+        redirect_back fallback_location: edit_admin_participant_path(@participant),
+                      alert: "No company_name to match against"
+        return
+      end
+
+      # Try exact match first
+      company = Company.find_by("LOWER(name) = LOWER(?)", @participant.company_name)
+
+      # Try alias match if no exact match
+      if company.nil?
+        company = Company.where("EXISTS (
+          SELECT 1 FROM json_each(alias)
+          WHERE LOWER(json_each.value) = LOWER(?)
+        )", @participant.company_name).first
+      end
+
+      if company
+        @participant.update!(company_id: company.id)
+        redirect_back fallback_location: edit_admin_participant_path(@participant),
+                      notice: "Linked to company: #{company.name}"
+      else
+        redirect_back fallback_location: edit_admin_participant_path(@participant),
+                      alert: "No company match found for '#{@participant.company_name}'. Consider creating the company."
       end
     end
 

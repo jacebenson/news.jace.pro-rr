@@ -152,18 +152,35 @@
               </div>
             <% end %>
             <%# Capacity/Seats information %>
-            <% if time["capacity"].present? && time["capacity"].to_i > 0 %>
-              <div class="flex items-center gap-2 text-xs text-gray-500 ml-6">
-                <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <% if time["seatsRemaining"].present? %>
+            <% if time["seatsRemaining"].present? %>
+              <%# Limited capacity sessions %>
+              <% if time["capacity"].present? && time["capacity"].to_i > 0 %>
+                <div class="flex items-center gap-2 text-xs text-gray-500 ml-6">
+                  <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
                   <% taken = time["capacity"].to_i - time["seatsRemaining"].to_i %>
-                  <span><%= taken %> / <%= time["capacity"] %> seats taken</span>
-                <% else %>
-                  <span><%= time["capacity"] %> seat capacity</span>
-                <% end %>
-              </div>
+                  <span>
+                    <%= taken %> / <%= time["capacity"] %> seats taken
+                    <% if time["waitlistRemaining"].present? && time["waitlistRemaining"].to_i > 0 %>
+                      <span class="text-orange-500">(<%= time["waitlistRemaining"] %> on waitlist)</span>
+                    <% elsif time["seatsRemaining"].to_i == 0 && time["waitlistRemaining"].to_i == 0 %>
+                      <span class="text-red-500">(Full - waitlist full)</span>
+                    <% elsif time["seatsRemaining"].to_i == 0 %>
+                      <span class="text-orange-500">(Full)</span>
+                    <% end %>
+                  </span>
+                </div>
+              <%# Unlimited capacity sessions (keynotes, etc) - show registration count %>
+              <% elsif time["capacity"].to_i == 0 && time["seatsRemaining"].to_i < 0 %>
+                <% registered = time["seatsRemaining"].to_i.abs %>
+                <div class="flex items-center gap-2 text-xs text-gray-500 ml-6">
+                  <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  <span><%= registered.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %> registered</span>
+                </div>
+              <% end %>
             <% end %>
           <% end %>
         </div>
@@ -194,11 +211,15 @@
       <% end %>
 
       <% if logged_in? %>
-        <button type="button" class="rounded p-1 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50" title="Save to list">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <% in_list = current_user.saved_sessions.exists?(ksession.id) %>
+        <%= button_to toggle_session_list_path(ksession), method: :post,
+            id: "session-list-button-#{ksession.id}",
+            class: "rounded p-1 #{in_list ? 'text-yellow-500 bg-yellow-50' : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'}",
+            title: in_list ? "Remove from list" : "Save to list" do %>
+          <svg class="h-5 w-5" fill="<%= in_list ? 'currentColor' : 'none' %>" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
           </svg>
-        </button>
+        <% end %>
       <% end %>
     </div>
   </div>

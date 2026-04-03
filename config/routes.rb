@@ -65,6 +65,7 @@ Rails.application.routes.draw do
   end
   post "knowledge_sessions/:id/hide_speaker/:participant_id", to: "knowledge_sessions#hide_speaker", as: :hide_session_speaker
   post "knowledge_sessions/:id/unhide_speaker/:participant_id", to: "knowledge_sessions#unhide_speaker", as: :unhide_session_speaker
+  post "knowledge_sessions/:id/toggle_list", to: "knowledge_sessions#toggle_list", as: :toggle_session_list
 
   # Account (authenticated)
   get "account", to: "accounts#show"
@@ -82,6 +83,8 @@ Rails.application.routes.draw do
       end
       member do
         post :link_company
+        post :unlink_company
+        post :find_company_match
         get :merge
         get "compare/:target_id", to: "participants#compare", as: :compare
         post :merge, to: "participants#execute_merge", as: :execute_merge

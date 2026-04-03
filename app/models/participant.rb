@@ -33,7 +33,8 @@ class Participant < ApplicationRecord
 
     # Search using SQL - compare normalized versions
     # This avoids loading all records into memory
-    where("LOWER(REPLACE(REPLACE(REPLACE(name, ' ', ''), '-', ''), '_', '')) = ?", normalized_slug).first
+    # Remove spaces, dashes, underscores, and periods (for titles like "Dr.")
+    where("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(name, ' ', ''), '-', ''), '_', ''), '.', '')) = ?", normalized_slug).first
   end
 
   # Normalize a name for comparison (removes common variations)

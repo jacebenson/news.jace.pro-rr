@@ -77,14 +77,19 @@ class FetchKnowledgeSessionsJob < ApplicationJob
   def make_api_request(config, from)
     uri = URI("https://events.rainfocus.com/api/search")
 
+    # Allow overriding profile_id and widget_id via env vars when authenticated
+    profile_id = ENV["RAINFOCUS_PROFILE_ID"].presence || config[:profile_id]
+    widget_id = ENV["RAINFOCUS_WIDGET_ID"].presence || config[:widget_id]
+
     headers = {
       "Accept" => "*/*",
       "Content-Type" => "application/x-www-form-urlencoded; charset=UTF-8",
       "Origin" => "https://knowledge.servicenow.com",
       "Referer" => "https://knowledge.servicenow.com/",
-      "rfapiprofileid" => config[:profile_id]
+      "rfapiprofileid" => profile_id
     }
-    headers["rfwidgetid"] = config[:widget_id] if config[:widget_id]
+    headers["rfwidgetid"] = widget_id if widget_id
+    headers["rfauthtoken"] = ENV["RAINFOCUS_AUTH_TOKEN"] if ENV["RAINFOCUS_AUTH_TOKEN"].present?
 
     body = URI.encode_www_form({
       "tab.catalogtab" => config[:catalog_tab],
@@ -167,6 +172,7 @@ class FetchKnowledgeSessionsJob < ApplicationJob
         date: t["date"],
         capacity: t["capacity"],
         seatsRemaining: t["seatsRemaining"],
+        waitlistRemaining: t["waitlistRemaining"],
         startTimeFormatted: t["startTimeFormatted"],
         endTimeFormatted: t["endTimeFormatted"],
         length: "#{t['length']} minutes",
@@ -237,10 +243,13 @@ class FetchKnowledgeSessionsJob < ApplicationJob
       if participant.new_record?
         participant.assign_attributes(participant_data)
       else
-        # Only update fields that are currently blank
-        participant_data.each do |key, value|
-          participant[key] = value if participant[key].blank?
-        end
+        # Always update these fields from API (keep data fresh)
+        participant.company_name = p["company"] if p["company"].present?
+        participant.title = p["title"] if p["title"].present?
+
+        # Only fill in blank fields for these (don't overwrite curated data)
+        participant.image_url = p["photoURL"] if participant.image_url.blank? && p["photoURL"].present?
+        participant.bio = p["bio"] if participant.bio.blank? && p["bio"].present?
       end
 
       participant.save!

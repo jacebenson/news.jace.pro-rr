@@ -79,12 +79,14 @@
     <%= render "shared/nav_tabs" if content_for?(:show_nav_tabs) || @show_nav_tabs %>
 
     <main class="px-4">
-      <% if notice %>
-        <div class="my-2 p-3 bg-green-100 text-green-800 rounded"><%= notice %></div>
-      <% end %>
-      <% if alert %>
-        <div class="my-2 p-3 bg-red-100 text-red-800 rounded"><%= alert %></div>
-      <% end %>
+      <div id="flash-messages">
+        <% if notice %>
+          <div class="my-2 p-3 bg-green-100 text-green-800 rounded"><%= notice %></div>
+        <% end %>
+        <% if alert %>
+          <div class="my-2 p-3 bg-red-100 text-green-800 rounded"><%= alert %></div>
+        <% end %>
+      </div>
       <%= yield %>
     </main>
   </body>

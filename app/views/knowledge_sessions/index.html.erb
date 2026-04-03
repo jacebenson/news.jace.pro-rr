@@ -19,6 +19,12 @@
       <% end %>
 
       <%= form_with url: send("#{@event}_path"), method: :get, class: "flex gap-2", local: true do |f| %>
+        <%# Preserve session_types when searching %>
+        <% if @session_types.present? %>
+          <% @session_types.each do |type| %>
+            <%= hidden_field_tag "session_types[]", type %>
+          <% end %>
+        <% end %>
         <%= text_field_tag :search, @search, placeholder: "Search sessions...",
             class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm" %>
         <%= f.submit "Search", class: "rounded-md bg-blue-600 px-4 py-2 text-white text-sm hover:bg-blue-700 cursor-pointer" %>
@@ -31,7 +37,7 @@
     <%= link_to "Parties", send("#{@event}_path", tags: "party"),
         class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags == 'party' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <%= link_to "All Sessions", send("#{@event}_path"),
-        class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow && @session_types.blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <% if @event == "k26" %>
       <%= link_to "Expo Map ↗", "https://knowledge26.expofp.com", target: "_blank", rel: "noopener",
           class: "px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" %>
@@ -44,7 +50,7 @@
 
   <%# Export Button %>
   <div class="mb-4 flex justify-end">
-    <%= link_to send("#{@event}_export_path", params.permit(:search, :company, :exclude_servicenow, :venue, :room, :tags).to_h, format: :csv),
+    <%= link_to send("#{@event}_export_path", params.permit(:search, :company, :exclude_servicenow, :venue, :room, :tags, :session_types, :speaker_filter).to_h, format: :csv),
         class: "inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700" do %>
       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -108,6 +114,39 @@
           onchange: "this.form.submit()" %>
       Exclude ServiceNow-only
     </label>
+
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-medium text-gray-700">Types:</span>
+      <% session_type_options = {
+        "KEY" => "Keynotes",
+        "SNU" => "Pre-conf",
+        "CCL" => "Labs",
+        "CCB" => "CreatorCon",
+        "SES" => "Sessions",
+        "SPN" => "Sponsored"
+      } %>
+      <% session_type_options.each do |code, label| %>
+        <label class="flex items-center gap-1 text-xs text-gray-600 whitespace-nowrap cursor-pointer" title="Show <%= label %> sessions">
+          <%= check_box_tag "session_types[]", code, @session_types&.include?(code),
+              class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+              onchange: "this.form.submit()" %>
+          <%= label %>
+        </label>
+      <% end %>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label for="speaker_filter" class="text-sm font-medium text-gray-700">Speakers:</label>
+      <%= select_tag :speaker_filter,
+          options_for_select([
+            ["All Speakers", ""],
+            ["MVP Holders", "mvp"],
+            ["SNAPP Card Holders", "snapp"],
+            ["From Acquisitions", "acquisition"]
+          ], @speaker_filter),
+          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+          onchange: "this.form.submit()" %>
+    </div>
 
     <span class="text-sm text-gray-500">
       <%= @active_count %> active<% if @stale_count > 0 %>, <span class="text-amber-600"><%= @stale_count %> cancelled</span><% end %>
