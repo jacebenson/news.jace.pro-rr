@@ -6,7 +6,7 @@
   <div class="mt-2 text-sm text-gray-500">
     <span class="mr-4">Installs: <strong class="text-gray-900"><%= number_with_delimiter(@app.purchase_count) %></strong></span>
     <span class="mr-4">Reviews: <strong class="text-gray-900"><%= @app.review_count %></strong></span>
-    <span>Last fetched: <%= @app.last_fetched_at ? time_ago_in_words(Time.at(@app.last_fetched_at / 1000)) + " ago" : "Never" %></span>
+    <span>Last fetched: <%= @app.last_fetched_at ? time_ago_in_words(@app.last_fetched_at) + " ago" : "Never" %></span>
   </div>
 </div>
 
