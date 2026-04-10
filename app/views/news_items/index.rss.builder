@@ -2,9 +2,10 @@
 # Reference: https://www.rssboard.org/rss-specification
 
 # Helper to safely format dates for RSS (handles both Time and Integer timestamps)
+# Note: stored timestamps are in milliseconds, so divide by 1000 for Time.at
 def rss_date(value)
   return nil if value.nil?
-  time = value.is_a?(Integer) ? Time.at(value) : value.to_time
+  time = value.is_a?(Integer) ? Time.at(value / 1000.0) : value.to_time
   time.rfc2822
 end
 
