@@ -39,7 +39,7 @@
     <%= link_to "All Sessions", send("#{@event}_path"),
         class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow && @session_types.blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     <% if @event == "k26" %>
-      <%= link_to "Expo Map ↗", "https://knowledge26.expofp.com", target: "_blank", rel: "noopener",
+      <%= link_to "Expo Map ↗", "https://knowledge2026.expofp.com", target: "_blank", rel: "noopener",
           class: "px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" %>
     <% end %>
     <% if admin? %>
