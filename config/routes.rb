@@ -97,6 +97,8 @@ Rails.application.routes.draw do
     resources :knowledge_sessions do
       member do
         delete "speakers/:participant_id", to: "knowledge_sessions#remove_speaker", as: :remove_speaker
+        post :mark_canceled
+        post :unmark_canceled
       end
     end
     resources :store_apps, controller: "servicenow_store_apps" do

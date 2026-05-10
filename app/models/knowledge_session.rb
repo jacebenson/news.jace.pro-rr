@@ -112,6 +112,54 @@ class KnowledgeSession < ApplicationRecord
   scope :stale, -> { where("last_seen_at < ?", 48.hours.ago).where.not("code LIKE 'PARTY%'") }
   scope :active, -> { where("last_seen_at >= ? OR last_seen_at IS NULL OR code LIKE ?", 48.hours.ago, "PARTY%") }
 
+  # K26 sessions not seen since May 4, 2026 (assumed canceled)
+  scope :unseen_since_k26_start, -> {
+    where(event_id: EVENT_IDS[:k26])
+      .where("last_seen_at < ?", K26_START_DATE)
+      .where.not("code LIKE 'PARTY%'")
+      .where(canceled_at: nil)
+  }
+
+  # Knowledge 2026 event start date - sessions not seen after this are assumed canceled
+  K26_START_DATE = Date.new(2026, 5, 4)
+
+  # Session status based on date and canceled flag
+  def canceled?
+    # Explicitly marked as canceled, or not seen since event started
+    return true if canceled_at.present?
+    return false unless event_id == EVENT_IDS[:k26]
+    return false if code&.start_with?("PARTY") # Manual entries are never auto-canceled
+    last_seen_at.present? && last_seen_at < K26_START_DATE
+  end
+
+  def upcoming?
+    return false if canceled?
+    first_date = times_array.first&.dig("date")
+    first_date.present? && Date.parse(first_date) >= Date.current
+  end
+
+  def completed?
+    return false if canceled?
+    first_date = times_array.first&.dig("date")
+    first_date.present? && Date.parse(first_date) < Date.current
+  end
+
+  def status
+    return "canceled" if canceled?
+    return "completed" if completed?
+    return "upcoming" if upcoming?
+    "unknown"
+  end
+
+  def status_label
+    case status
+    when "canceled" then "Canceled"
+    when "completed" then "Completed"
+    when "upcoming" then "Upcoming"
+    else nil
+    end
+  end
+
   private
 
   def normalize_session_id

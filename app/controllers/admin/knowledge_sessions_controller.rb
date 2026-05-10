@@ -67,6 +67,16 @@ module Admin
       end
     end
 
+    def mark_canceled
+      @session.update!(canceled_at: Time.current)
+      redirect_back fallback_location: admin_knowledge_session_path(@session), notice: "Session marked as canceled."
+    end
+
+    def unmark_canceled
+      @session.update!(canceled_at: nil)
+      redirect_back fallback_location: admin_knowledge_session_path(@session), notice: "Session restored (no longer marked as canceled)."
+    end
+
     private
 
     def set_session

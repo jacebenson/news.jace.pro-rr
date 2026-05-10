@@ -1,4 +1,4 @@
-<div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow <%= 'opacity-60 border-amber-300 bg-amber-50' if ksession.stale? %>">
+<div class="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow <%= 'opacity-60 border-red-300 bg-red-50' if ksession.canceled? %>">
   <div class="flex flex-col md:flex-row md:items-start gap-4">
     <div class="flex-shrink-0">
       <% if ksession.code.present? %>
@@ -6,9 +6,13 @@
           <%= ksession.code %>
         </span>
       <% end %>
-      <% if ksession.stale? %>
-        <span class="inline-block rounded bg-amber-100 text-amber-800 px-2 py-1 text-xs mt-1" title="Last seen in official catalog: <%= ksession.last_seen_at&.strftime('%b %d, %Y') %>">
-          ⚠️ May be cancelled
+      <% if ksession.canceled? %>
+        <span class="inline-block rounded bg-red-100 text-red-800 px-2 py-1 text-xs mt-1 font-medium">
+          ❌ CANCELED
+        </span>
+      <% elsif ksession.completed? %>
+        <span class="inline-block rounded bg-green-100 text-green-800 px-2 py-1 text-xs mt-1">
+          ✓ Completed
         </span>
       <% end %>
     </div>
@@ -239,13 +243,34 @@
         <span></span>
       <% end %>
       <% if admin? %>
-        <%= link_to edit_admin_knowledge_session_path(ksession),
-            class: "inline-flex items-center gap-1 text-gray-400 hover:text-blue-600" do %>
-          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-          Edit
-        <% end %>
+        <div class="flex items-center gap-2">
+          <% if ksession.canceled? %>
+            <%= button_to unmark_canceled_admin_knowledge_session_path(ksession), method: :post,
+                class: "inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800",
+                data: { turbo_confirm: "Restore this session (mark as not canceled)?" } do %>
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Restore
+            <% end %>
+          <% else %>
+            <%= button_to mark_canceled_admin_knowledge_session_path(ksession), method: :post,
+                class: "inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800",
+                data: { turbo_confirm: "Mark this session as canceled?" } do %>
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Mark Canceled
+            <% end %>
+          <% end %>
+          <%= link_to edit_admin_knowledge_session_path(ksession),
+              class: "inline-flex items-center gap-1 text-gray-400 hover:text-blue-600" do %>
+            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit
+          <% end %>
+        </div>
       <% end %>
     </div>
   <% end %>

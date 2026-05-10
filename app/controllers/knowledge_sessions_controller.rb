@@ -159,8 +159,10 @@ class KnowledgeSessionsController < ApplicationController
       .sort
 
     @total_count = sessions.count
-    @stale_count = sessions.stale.count
-    @active_count = @total_count - @stale_count
+    # Count canceled vs not-canceled for K26 (using the new logic)
+    all_sessions = sessions.to_a
+    @canceled_count = all_sessions.count(&:canceled?)
+    @active_count = @total_count - @canceled_count
 
     # Sorting
     @sort = params[:sort].presence || "default"

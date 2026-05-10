@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_23_192059) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_09_202121) do
   create_table "companies", force: :cascade do |t|
     t.string "name"
     t.text "alias", default: "[]"
@@ -81,6 +81,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_23_192059) do
     t.datetime "updated_at", null: false
     t.datetime "last_seen_at"
     t.string "url"
+    t.datetime "canceled_at"
+    t.index ["canceled_at"], name: "index_knowledge_sessions_on_canceled_at"
     t.index ["session_id"], name: "index_knowledge_sessions_on_session_id", unique: true
   end
 

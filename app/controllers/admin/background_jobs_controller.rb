@@ -22,6 +22,13 @@ module Admin
       @partners_with_rss = Company.partners.where.not(rss_feed_url: nil).count
       @participants_without_company = Participant.where(company_id: nil).where.not(company_name: [ nil, "" ]).count
 
+      # K26 session stats
+      k26_sessions = KnowledgeSession.for_event("k26")
+      @k26_total = k26_sessions.count
+      @k26_canceled = k26_sessions.where.not(canceled_at: nil).count
+      @k26_unseen = KnowledgeSession.unseen_since_k26_start.count
+      @k26_with_recordings = k26_sessions.where.not(recording_url: nil).where.not(recording_url: "").count
+
       # Get next scheduled run for each job type
       @next_runs = {}
       job_classes = %w[FetchNewsItemsJob FetchAppsJob EnrichItemJob FetchPartnersJob EnrichPartnersJob LinkParticipantsJob MigrateParticipantImagesToS3Job FetchSecFilingsJob FetchKnowledgeSessionsJob BackupJob]
@@ -69,6 +76,12 @@ module Admin
       when "backup"
         BackupJob.perform_later(force: true)
         flash[:notice] = "BackupJob enqueued (forced)"
+      when "mark_k26_canceled"
+        result = MarkK26SessionStatusJob.perform_now
+        flash[:notice] = result[:message]
+      when "fetch_k26_recordings"
+        result = FetchK26RecordingsJob.perform_now
+        flash[:notice] = result[:message]
       else
         flash[:alert] = "Unknown job: #{job_name}"
       end

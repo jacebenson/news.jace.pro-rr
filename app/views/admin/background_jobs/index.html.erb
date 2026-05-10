@@ -92,6 +92,28 @@
             description: "Rainfocus API - sessions & speakers",
             color: "indigo",
             next_run: @next_runs["FetchKnowledgeSessionsJob"] %>
+        
+        <%# One-time K26 cleanup job %>
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div>
+            <span class="font-medium text-gray-900">Mark K26 Canceled Sessions</span>
+            <p class="text-sm text-gray-500">One-time: Mark sessions last seen before May 4 as canceled</p>
+          </div>
+          <%= button_to "Run Now", admin_run_job_path(job: "mark_k26_canceled"), method: :post,
+              class: "px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200",
+              data: { turbo_confirm: "Mark all K26 sessions last seen before May 4, 2026 as canceled?" } %>
+        </div>
+        
+        <%# Fetch K26 recordings job %>
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div>
+            <span class="font-medium text-gray-900">Fetch K26 Recording URLs</span>
+            <p class="text-sm text-gray-500">One-time: Fetch Brightcove video URLs for all non-canceled sessions</p>
+          </div>
+          <%= button_to "Run Now", admin_run_job_path(job: "fetch_k26_recordings"), method: :post,
+              class: "px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200",
+              data: { turbo_confirm: "Fetch recording URLs for all K26 sessions?" } %>
+        </div>
       </div>
     </div>
 
@@ -183,6 +205,49 @@
       <div>
         <span class="text-gray-500">Never Fetched:</span>
         <span class="font-medium"><%= @never_fetched %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# K26 Session Status %>
+<div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+  <div class="px-4 py-3 border-b">
+    <h2 class="font-semibold text-gray-900">Knowledge 2026 Session Status</h2>
+  </div>
+  <div class="p-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div>
+        <span class="text-gray-500">Total Sessions:</span>
+        <span class="font-medium"><%= @k26_total %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">Canceled:</span>
+        <% if @k26_canceled > 0 %>
+          <span class="font-medium text-red-600"><%= @k26_canceled %></span>
+        <% else %>
+          <span class="font-medium">0</span>
+        <% end %>
+      </div>
+      <div>
+        <span class="text-gray-500">Need Processing:</span>
+        <% if @k26_unseen > 0 %>
+          <span class="font-medium text-amber-600"><%= @k26_unseen %></span>
+        <% else %>
+          <span class="font-medium text-green-600">0 ✓</span>
+        <% end %>
+      </div>
+      <div>
+        <span class="text-gray-500">Active/Completed:</span>
+        <span class="font-medium"><%= @k26_total - @k26_canceled %></span>
+      </div>
+      <div>
+        <span class="text-gray-500">With Recordings:</span>
+        <% if @k26_with_recordings > 0 %>
+          <span class="font-medium text-green-600"><%= @k26_with_recordings %></span>
+        <% else %>
+          <span class="font-medium">0</span>
+        <% end %>
       </div>
     </div>
   </div>
