@@ -133,6 +133,12 @@ class KnowledgeSessionsController < ApplicationController
       sessions = sessions.where("times LIKE ?", "%#{sanitize_sql_like(@venue_filter)} -%")
     end
 
+    # Recording filter - show only sessions with recordings
+    if params[:recorded] == "1"
+      @recorded_filter = true
+      sessions = sessions.where.not(recording_url: nil).where.not(recording_url: "")
+    end
+
     # Room filter (specific room within venue)
     if params[:room].present?
       @room_filter = params[:room]

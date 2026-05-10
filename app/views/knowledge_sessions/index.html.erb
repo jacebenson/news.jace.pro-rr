@@ -115,6 +115,13 @@
       Exclude ServiceNow-only
     </label>
 
+    <label class="flex items-center gap-2 text-sm text-gray-700">
+      <%= check_box_tag :recorded, "1", @recorded_filter,
+          class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+          onchange: "this.form.submit()" %>
+      Recorded only
+    </label>
+
     <div class="flex items-center gap-2">
       <span class="text-sm font-medium text-gray-700">Types:</span>
       <% session_type_options = {
