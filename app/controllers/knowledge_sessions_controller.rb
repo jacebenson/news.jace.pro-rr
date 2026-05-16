@@ -1,12 +1,24 @@
 class KnowledgeSessionsController < ApplicationController
   before_action :set_event_path_helper
+  helper_method :event_name
 
   def index
     @show_nav_tabs = true
     @event = params[:event] || "k26"
     @event_name = event_name(@event)
+    @all_events_view = @event == "all"
 
-    sessions = KnowledgeSession.for_event(@event).includes(:speakers)
+    sessions = if @all_events_view
+      KnowledgeSession.all.includes(:speakers)
+    else
+      KnowledgeSession.for_event(@event).includes(:speakers)
+    end
+
+    # Event filter for the all-sessions page
+    if @all_events_view && params[:session_event].present?
+      @session_event_filter = params[:session_event]
+      sessions = sessions.where(event_id: event_id_for(@session_event_filter))
+    end
 
     # User's saved list - supports "mine" or a user ID for sharing
     if params[:list].present?
@@ -18,9 +30,9 @@ class KnowledgeSessionsController < ApplicationController
 
       if list_user
         session_ids = list_user.knowledge_session_lists
-                               .joins(:knowledge_session)
-                               .where(knowledge_sessions: { event_id: event_id_for(@event) })
-                               .pluck(:knowledge_session_id)
+                                .joins(:knowledge_session)
+        session_ids = session_ids.where(knowledge_sessions: { event_id: event_id_for(@event) }) unless @all_events_view
+        session_ids = session_ids.pluck(:knowledge_session_id)
         sessions = sessions.where(id: session_ids)
         @showing_list = true
         @list_owner = list_user
@@ -146,7 +158,13 @@ class KnowledgeSessionsController < ApplicationController
     end
 
     # Get all unique venues and rooms for filter dropdowns
-    all_rooms = extract_rooms_from_sessions(KnowledgeSession.for_event(@event))
+    all_sessions_for_filters = if @all_events_view
+      @session_event_filter.present? ? KnowledgeSession.for_event(@session_event_filter) : KnowledgeSession.all
+    else
+      KnowledgeSession.for_event(@event)
+    end
+
+    all_rooms = extract_rooms_from_sessions(all_sessions_for_filters)
     @all_venues = all_rooms.map { |r| r.split(" - ").first }.uniq.sort
     @all_rooms = if @venue_filter.present?
       all_rooms.select { |r| r.start_with?("#{@venue_filter} -") }.sort
@@ -158,7 +176,7 @@ class KnowledgeSessionsController < ApplicationController
     @all_companies = Participant
       .joins(:knowledge_session_participants)
       .joins("INNER JOIN knowledge_sessions ON knowledge_sessions.id = knowledge_session_participants.knowledge_session_id")
-      .where(knowledge_sessions: { event_id: event_id_for(@event) })
+      .then { |scope| @all_events_view && @session_event_filter.blank? ? scope : scope.where(knowledge_sessions: { event_id: event_id_for(@all_events_view ? @session_event_filter : @event) }) }
       .where.not(company_name: [ nil, "" ])
       .distinct
       .pluck(:company_name)
@@ -176,9 +194,11 @@ class KnowledgeSessionsController < ApplicationController
 
     sessions = case @sort
     when "updated"
-      sessions.order(modified: :desc)
+        sessions.order(modified: :desc)
+    when "event"
+        sessions.order(:event_id, :title_sort)
     when "alpha"
-      sessions.order(:title_sort)
+        sessions.order(:title_sort)
     when "time"
       # Sort by first event start date/time - handle null/empty/malformed times gracefully
       # First, get all sessions and sort in Ruby to avoid JSON parsing errors in SQL
@@ -336,6 +356,7 @@ class KnowledgeSessionsController < ApplicationController
 
   def event_name(event)
     case event
+    when "all" then "Sessions"
     when "k20" then "Knowledge 2020"
     when "k21" then "Knowledge 2021"
     when "k22" then "Knowledge 2022"

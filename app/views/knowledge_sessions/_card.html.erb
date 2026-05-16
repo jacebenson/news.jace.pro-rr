@@ -15,6 +15,11 @@
           ✓ Completed
         </span>
       <% end %>
+      <% if local_assigns[:show_event] %>
+        <span class="inline-block rounded bg-blue-50 text-blue-700 px-2 py-1 text-xs mt-1">
+          <%= event_name(KnowledgeSession::EVENT_IDS.key(ksession.event_id).to_s) %>
+        </span>
+      <% end %>
     </div>
 
     <div class="flex-1 min-w-0">

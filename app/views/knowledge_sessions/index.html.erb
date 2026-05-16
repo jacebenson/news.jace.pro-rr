@@ -12,13 +12,16 @@
     <div class="flex items-center gap-4">
       <% if logged_in? %>
         <% if @showing_list %>
-          <%= link_to "Show All", send("#{@event}_path"), class: "text-blue-600 hover:underline" %>
+          <%= link_to "Show All", @all_events_view ? sessions_path : send("#{@event}_path"), class: "text-blue-600 hover:underline" %>
         <% else %>
-          <%= link_to "My List", send("#{@event}_list_path", list: "mine"), class: "text-blue-600 hover:underline" %>
+          <%= link_to "My List", @all_events_view ? sessions_path(list: "mine") : send("#{@event}_list_path", list: "mine"), class: "text-blue-600 hover:underline" %>
         <% end %>
       <% end %>
 
-      <%= form_with url: send("#{@event}_path"), method: :get, class: "flex gap-2", local: true do |f| %>
+      <%= form_with url: (@all_events_view ? sessions_path : send("#{@event}_path")), method: :get, class: "flex gap-2", local: true do |f| %>
+        <% if @session_event_filter.present? %>
+          <%= hidden_field_tag :session_event, @session_event_filter %>
+        <% end %>
         <%# Preserve session_types when searching %>
         <% if @session_types.present? %>
           <% @session_types.each do |type| %>
@@ -34,10 +37,14 @@
 
   <%# Navigation tabs - Parties / All Sessions / Expo Map / Add Event %>
   <div class="mb-4 flex flex-wrap gap-2">
-    <%= link_to "Parties", send("#{@event}_path", tags: "party"),
-        class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags == 'party' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
-    <%= link_to "All Sessions", send("#{@event}_path"),
-        class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow && @session_types.blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <%= link_to "Sessions", sessions_path,
+        class: "px-4 py-2 rounded-lg text-sm font-medium #{@all_events_view ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <% unless @all_events_view %>
+      <%= link_to "Parties", send("#{@event}_path", tags: "party"),
+          class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags == 'party' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "All Sessions", send("#{@event}_path"),
+          class: "px-4 py-2 rounded-lg text-sm font-medium #{@tags.blank? && @company_filter.blank? && !@exclude_servicenow && @session_types.blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    <% end %>
     <% if @event == "k26" %>
       <%= link_to "Expo Map ↗", "https://knowledge2026.expofp.com", target: "_blank", rel: "noopener",
           class: "px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" %>
@@ -48,19 +55,22 @@
     <% end %>
   </div>
 
-  <%# Export Button %>
-  <div class="mb-4 flex justify-end">
-    <%= link_to send("#{@event}_export_path", params.permit(:search, :company, :exclude_servicenow, :venue, :room, :tags, :session_types, :speaker_filter).to_h, format: :csv),
-        class: "inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700" do %>
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-      Export CSV
-    <% end %>
-  </div>
+  <% unless @all_events_view %>
+    <%# Export Button %>
+    <div class="mb-4 flex justify-end">
+      <%= link_to send("#{@event}_export_path", params.permit(:search, :company, :exclude_servicenow, :recorded, :venue, :room, :tags, :speaker_filter, session_types: []).to_h, format: :csv),
+          class: "inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700" do %>
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Export CSV
+      <% end %>
+    </div>
+  <% end %>
 
   <%# Filters %>
-  <%= form_with url: send("#{@event}_path"), method: :get, class: "mb-4 flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg", local: true do |f| %>
+  <% advanced_filters_active = @venue_filter.present? || @room_filter.present? || @company_filter.present? || @exclude_servicenow || @session_types.present? || @speaker_filter.present? %>
+  <%= form_with url: (@all_events_view ? sessions_path : send("#{@event}_path")), method: :get, class: "mb-4 p-4 bg-gray-50 rounded-lg", local: true do |f| %>
     <%# Preserve search if present %>
     <% if @search.present? %>
       <%= hidden_field_tag :search, @search %>
@@ -71,93 +81,114 @@
       <%= hidden_field_tag :tags, @tags %>
     <% end %>
 
-    <div class="flex items-center gap-2">
-      <label for="sort" class="text-sm font-medium text-gray-700">Sort:</label>
-      <%= select_tag :sort,
-          options_for_select([
-            ["Active First", "default"],
-            ["Last Updated", "updated"],
-            ["A-Z", "alpha"],
-            ["Start Time", "time"]
-          ], @sort),
-          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
-          onchange: "this.form.submit()" %>
+    <div class="flex flex-wrap items-center gap-4">
+      <% if @all_events_view %>
+        <div class="flex items-center gap-2">
+          <label for="session_event" class="text-sm font-medium text-gray-700">Event:</label>
+          <%= select_tag :session_event,
+              options_for_select([["All Events", ""]] + KnowledgeSession::EVENT_IDS.keys.reject { |event| event == :all }.map { |event| [event_name(event.to_s), event.to_s] }, @session_event_filter),
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+              onchange: "this.form.submit()" %>
+        </div>
+      <% end %>
+
+      <div class="flex items-center gap-2">
+        <label for="sort" class="text-sm font-medium text-gray-700">Sort:</label>
+        <%= select_tag :sort,
+            options_for_select([
+              ["Active First", "default"],
+              ["Last Updated", "updated"],
+              ["Event", "event"],
+              ["A-Z", "alpha"],
+              ["Start Time", "time"]
+            ], @sort),
+            class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+            onchange: "this.form.submit()" %>
+      </div>
+
+      <label class="flex items-center gap-2 text-sm text-gray-700">
+        <%= check_box_tag :recorded, "1", @recorded_filter,
+            class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+            onchange: "this.form.submit()" %>
+        Recorded only
+      </label>
+
+      <span class="text-sm text-gray-500">
+        <%= @active_count %> sessions<% if @canceled_count > 0 %>, <span class="text-red-600"><%= @canceled_count %> canceled</span><% end %>
+      </span>
     </div>
 
-    <div class="flex items-center gap-2">
-      <label for="venue" class="text-sm font-medium text-gray-700">Venue:</label>
-      <%= select_tag :venue,
-          options_for_select([["All Venues", ""]] + @all_venues.map { |v| [v, v] }, @venue_filter),
-          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
-          onchange: "this.form.room.value = ''; this.form.submit()" %>
-    </div>
+    <details class="mt-3 border-t border-gray-200 pt-3" <%= "open" if advanced_filters_active %>>
+      <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+        Advanced filters<% if advanced_filters_active %> <span class="text-blue-600">(active)</span><% end %>
+      </summary>
 
-    <div class="flex items-center gap-2">
-      <label for="room" class="text-sm font-medium text-gray-700">Room:</label>
-      <%= select_tag :room,
-          options_for_select([["All Rooms", ""]] + @all_rooms.map { |r| [r, r] }, @room_filter),
-          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
-          onchange: "this.form.submit()" %>
-    </div>
+      <div class="mt-3 flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+          <label for="venue" class="text-sm font-medium text-gray-700">Venue:</label>
+          <%= select_tag :venue,
+              options_for_select([["All Venues", ""]] + @all_venues.map { |v| [v, v] }, @venue_filter),
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+              onchange: "this.form.room.value = ''; this.form.submit()" %>
+        </div>
 
-    <div class="flex items-center gap-2">
-      <label for="company" class="text-sm font-medium text-gray-700">Company:</label>
-      <%= select_tag :company,
-          options_for_select([["All Companies", ""]] + @all_companies.map { |c| [c, c] }, @company_filter),
-          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
-          onchange: "this.form.submit()" %>
-    </div>
+        <div class="flex items-center gap-2">
+          <label for="room" class="text-sm font-medium text-gray-700">Room:</label>
+          <%= select_tag :room,
+              options_for_select([["All Rooms", ""]] + @all_rooms.map { |r| [r, r] }, @room_filter),
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+              onchange: "this.form.submit()" %>
+        </div>
 
-    <label class="flex items-center gap-2 text-sm text-gray-700">
-      <%= check_box_tag :exclude_servicenow, "1", @exclude_servicenow,
-          class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
-          onchange: "this.form.submit()" %>
-      Exclude ServiceNow-only
-    </label>
+        <div class="flex items-center gap-2">
+          <label for="company" class="text-sm font-medium text-gray-700">Company:</label>
+          <%= select_tag :company,
+              options_for_select([["All Companies", ""]] + @all_companies.map { |c| [c, c] }, @company_filter),
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+              onchange: "this.form.submit()" %>
+        </div>
 
-    <label class="flex items-center gap-2 text-sm text-gray-700">
-      <%= check_box_tag :recorded, "1", @recorded_filter,
-          class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
-          onchange: "this.form.submit()" %>
-      Recorded only
-    </label>
-
-    <div class="flex items-center gap-2">
-      <span class="text-sm font-medium text-gray-700">Types:</span>
-      <% session_type_options = {
-        "KEY" => "Keynotes",
-        "SNU" => "Pre-conf",
-        "CCL" => "Labs",
-        "CCB" => "CreatorCon",
-        "SES" => "Sessions",
-        "SPN" => "Sponsored"
-      } %>
-      <% session_type_options.each do |code, label| %>
-        <label class="flex items-center gap-1 text-xs text-gray-600 whitespace-nowrap cursor-pointer" title="Show <%= label %> sessions">
-          <%= check_box_tag "session_types[]", code, @session_types&.include?(code),
+        <label class="flex items-center gap-2 text-sm text-gray-700">
+          <%= check_box_tag :exclude_servicenow, "1", @exclude_servicenow,
               class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
               onchange: "this.form.submit()" %>
-          <%= label %>
+          Exclude ServiceNow-only
         </label>
-      <% end %>
-    </div>
 
-    <div class="flex items-center gap-2">
-      <label for="speaker_filter" class="text-sm font-medium text-gray-700">Speakers:</label>
-      <%= select_tag :speaker_filter,
-          options_for_select([
-            ["All Speakers", ""],
-            ["MVP Holders", "mvp"],
-            ["SNAPP Card Holders", "snapp"],
-            ["From Acquisitions", "acquisition"]
-          ], @speaker_filter),
-          class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
-          onchange: "this.form.submit()" %>
-    </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-700">Types:</span>
+          <% session_type_options = {
+            "KEY" => "Keynotes",
+            "SNU" => "Pre-conf",
+            "CCL" => "Labs",
+            "CCB" => "CreatorCon",
+            "SES" => "Sessions",
+            "SPN" => "Sponsored"
+          } %>
+          <% session_type_options.each do |code, label| %>
+            <label class="flex items-center gap-1 text-xs text-gray-600 whitespace-nowrap cursor-pointer" title="Show <%= label %> sessions">
+              <%= check_box_tag "session_types[]", code, @session_types&.include?(code),
+                  class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500",
+                  onchange: "this.form.submit()" %>
+              <%= label %>
+            </label>
+          <% end %>
+        </div>
 
-    <span class="text-sm text-gray-500">
-      <%= @active_count %> sessions<% if @canceled_count > 0 %>, <span class="text-red-600"><%= @canceled_count %> canceled</span><% end %>
-    </span>
+        <div class="flex items-center gap-2">
+          <label for="speaker_filter" class="text-sm font-medium text-gray-700">Speakers:</label>
+          <%= select_tag :speaker_filter,
+              options_for_select([
+                ["All Speakers", ""],
+                ["MVP Holders", "mvp"],
+                ["SNAPP Card Holders", "snapp"],
+                ["From Acquisitions", "acquisition"]
+              ], @speaker_filter),
+              class: "rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border text-sm",
+              onchange: "this.form.submit()" %>
+        </div>
+      </div>
+    </details>
   <% end %>
 
   <% if @showing_list %>
@@ -188,14 +219,14 @@
     <div class="mb-4">
       <p class="text-sm text-gray-600">
         Showing results for "<%= @search %>"
-        <%= link_to "Clear", send("#{@event}_path"), class: "text-blue-600 hover:underline ml-2" %>
+        <%= link_to "Clear", @all_events_view ? sessions_path : send("#{@event}_path"), class: "text-blue-600 hover:underline ml-2" %>
       </p>
     </div>
   <% end %>
 
   <div class="space-y-4">
     <% @sessions.each do |ksession| %>
-      <%= render "knowledge_sessions/card", ksession: ksession %>
+      <%= render "knowledge_sessions/card", ksession: ksession, show_event: @all_events_view %>
     <% end %>
   </div>
 
@@ -207,7 +238,8 @@
 
   <%# Pagination %>
   <% if @total_pages > 1 || @showing_all %>
-    <% pagination_params = params.permit(:search, :company, :exclude_servicenow, :tags, :list, :venue, :room, :sort).to_h.symbolize_keys %>
+    <% pagination_params = params.permit(:search, :company, :exclude_servicenow, :recorded, :tags, :list, :venue, :room, :sort, :session_event, session_types: []).to_h.symbolize_keys %>
+    <% page_path = ->(extra = {}) { @all_events_view ? sessions_path(pagination_params.merge(extra)) : send("#{@event}_path", pagination_params.merge(extra)) } %>
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t pt-4">
       <div class="text-sm text-gray-600">
         <% if @showing_all %>
@@ -219,19 +251,19 @@
 
       <div class="flex items-center gap-2">
         <% if @showing_all %>
-          <%= link_to "Paginate", send("#{@event}_path", pagination_params.merge(page: 1)),
+          <%= link_to "Paginate", page_path.call(page: 1),
               class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
         <% else %>
           <%# Previous page %>
           <% if @page > 1 %>
-            <%= link_to "← Prev", send("#{@event}_path", pagination_params.merge(page: @page - 1)),
+            <%= link_to "← Prev", page_path.call(page: @page - 1),
                 class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
           <% end %>
 
           <%# Page numbers %>
           <% pages_to_show = ([@page - 2, 1].max..[@page + 2, @total_pages].min) %>
           <% if pages_to_show.first > 1 %>
-            <%= link_to "1", send("#{@event}_path", pagination_params.merge(page: 1)),
+            <%= link_to "1", page_path.call(page: 1),
                 class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
             <% if pages_to_show.first > 2 %><span class="text-gray-400">…</span><% end %>
           <% end %>
@@ -240,25 +272,25 @@
             <% if p == @page %>
               <span class="px-3 py-1 text-sm rounded bg-blue-600 text-white"><%= p %></span>
             <% else %>
-              <%= link_to p, send("#{@event}_path", pagination_params.merge(page: p)),
+              <%= link_to p, page_path.call(page: p),
                   class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
             <% end %>
           <% end %>
 
           <% if pages_to_show.last < @total_pages %>
             <% if pages_to_show.last < @total_pages - 1 %><span class="text-gray-400">…</span><% end %>
-            <%= link_to @total_pages, send("#{@event}_path", pagination_params.merge(page: @total_pages)),
+            <%= link_to @total_pages, page_path.call(page: @total_pages),
                 class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
           <% end %>
 
           <%# Next page %>
           <% if @page < @total_pages %>
-            <%= link_to "Next →", send("#{@event}_path", pagination_params.merge(page: @page + 1)),
+            <%= link_to "Next →", page_path.call(page: @page + 1),
                 class: "px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
           <% end %>
 
           <%# Show all link %>
-          <%= link_to "Show All", send("#{@event}_path", pagination_params.merge(all: 1)),
+          <%= link_to "Show All", page_path.call(all: 1),
               class: "ml-2 px-3 py-1 text-sm rounded border border-gray-300 hover:bg-gray-50" %>
         <% end %>
       </div>

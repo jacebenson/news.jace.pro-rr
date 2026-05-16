@@ -54,6 +54,7 @@ Rails.application.routes.draw do
   end
 
   # Knowledge Sessions - all events
+  get "sessions", to: "knowledge_sessions#index", defaults: { event: "all" }, as: :sessions
   %w[k20 k21 k22 k23 k24 k25 k26 nulledge25].each do |event|
     get "#{event}", to: "knowledge_sessions#index", defaults: { event: event }, as: event.to_sym
     get "#{event}/export", to: "knowledge_sessions#export", defaults: { event: event }, as: "#{event}_export".to_sym
