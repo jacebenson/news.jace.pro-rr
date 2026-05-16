@@ -87,6 +87,12 @@ module Admin
         result = VerifyRecordingUrlsJob.perform_now(dry_run: dry_run)
         messages = result.is_a?(Hash) && result.values.first.is_a?(Hash) ? result.values.map { |r| r[:message] }.join(" | ") : result[:message]
         flash[:notice] = dry_run ? "DRY RUN: #{messages}" : messages
+        # Store detailed results for display
+        if result.is_a?(Hash) && result.values.first.is_a?(Hash)
+          @verification_results = result.values
+        else
+          @verification_results = [ result ]
+        end
       when "verify_all_recordings_clear"
         result = VerifyRecordingUrlsJob.perform_now(dry_run: false)
         messages = result.is_a?(Hash) && result.values.first.is_a?(Hash) ? result.values.map { |r| r[:message] }.join(" | ") : result[:message]

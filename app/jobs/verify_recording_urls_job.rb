@@ -88,6 +88,24 @@ class VerifyRecordingUrlsJob < ApplicationJob
     message = "#{event.upcase}: Checked #{total}, #{valid} valid, #{invalid.count} invalid (#{action} #{invalid.count}), #{skipped.count} skipped"
     Rails.logger.info "[VerifyRecordingUrlsJob] #{message}"
 
+    # Also output to stdout for visibility when running locally
+    if Rails.env.development? || dry_run
+      puts "\n[VerifyRecordingUrlsJob] #{event.upcase} Results:"
+      puts "  Total checked: #{total}"
+      puts "  Valid: #{valid}"
+      puts "  Invalid: #{invalid.count}"
+      puts "  Skipped: #{skipped.count}"
+      if invalid.any?
+        puts "\n  Invalid codes:"
+        invalid.each { |code| puts "    - #{code}" }
+      end
+      if skipped.any?
+        puts "\n  Skipped (no policy key):"
+        skipped.each { |s| puts "    - #{s[:code]} (account: #{s[:account]})" }
+      end
+      puts ""
+    end
+
     {
       event: event,
       checked: total,
