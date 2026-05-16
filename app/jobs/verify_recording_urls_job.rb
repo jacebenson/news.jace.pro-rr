@@ -6,14 +6,16 @@ class VerifyRecordingUrlsJob < ApplicationJob
   POLICY_KEY_MAIN = "BCpkADawqM10puDCjU1kN2Q_uSH88Mt4Q3lnff2P52BxeoyUb-ArQcO-o7cWhORTaxyJXoyq4RH203fbAMmv5TkO_KrZJlPP2X42T2ofBRNH8wfZdvogEwb4nS_TbFjjw9YqZvls_o7730Rl".freeze
 
   # URL patterns vary by year
+  # K20-K23 codes already include year suffix in database
+  # K24-K26 codes do NOT include year suffix
   REF_PATTERNS = {
-    "k20" => ->(code) { "ref:K20-#{code}" },
-    "k21" => ->(code) { "ref:#{code}-K21" },
-    "k22" => ->(code) { "ref:#{code}-SDR22" },
-    "k23" => ->(code) { "ref:#{code}-K23" },
-    "k24" => ->(code) { "ref:#{code}-K24" },
-    "k25" => ->(code) { "ref:#{code}-K25" },
-    "k26" => ->(code) { "ref:#{code}-K26" }
+    "k20" => ->(code) { "ref:#{code}" },        # Code is like "K20-THS1221"
+    "k21" => ->(code) { "ref:#{code}" },        # Code is like "SPN1700-K21"
+    "k22" => ->(code) { "ref:#{code}" },        # Code is like "KEY1084-SDR22"
+    "k23" => ->(code) { "ref:#{code}" },        # Code is like "CCL1127-K23"
+    "k24" => ->(code) { "ref:#{code}-K24" },    # Code is like "CCB1106"
+    "k25" => ->(code) { "ref:#{code}-K25" },    # Code is like "CCB1161"
+    "k26" => ->(code) { "ref:#{code}-K26" }     # Code is like "CCB6828"
   }.freeze
 
   def perform(event: nil, dry_run: true)
