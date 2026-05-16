@@ -71,6 +71,30 @@ All jobs can be triggered from the admin panel at `/admin/background_jobs` or vi
 | `FetchSecFilingsJob` | SEC EDGAR filings (10-K, etc) | Weekly |
 | `BackupJob` | SQLite backup to S3 | Daily (if enabled) |
 
+### Knowledge Recording URL Maintenance
+
+`VerifyRecordingUrlsJob` is intentionally not exposed in the admin UI. It is a maintenance tool for one-time Knowledge archive cleanups.
+
+Use dry-run first:
+
+```bash
+./bin/rails runner 'result = VerifyRecordingUrlsJob.perform_now(event: "k26", dry_run: true); puts result[:message]; puts result[:invalid_codes].join("\n")'
+```
+
+Clear invalid URLs only after reviewing the dry-run output:
+
+```bash
+./bin/rails runner 'result = VerifyRecordingUrlsJob.perform_now(event: "k26", dry_run: false); puts result[:message]'
+```
+
+For future events like K27:
+
+1. Add the event key to `VerifyRecordingUrlsJob::REF_PATTERNS`.
+2. Confirm whether session `code` values already include the year suffix.
+3. Confirm the Brightcove account and policy key still work.
+4. Run `dry_run: true` first.
+5. Only then run `dry_run: false`.
+
 ## Common Commands
 
 ### Rails Console

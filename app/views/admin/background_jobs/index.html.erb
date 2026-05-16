@@ -104,46 +104,6 @@
               data: { turbo_confirm: "Fetch recording URLs for all K26 sessions?" } %>
         </div>
         
-        <%# Verify recording URLs for all events %>
-        <div class="flex items-center justify-between py-2 border-t border-gray-100">
-          <div>
-            <span class="font-medium text-gray-900">Verify All Recording URLs</span>
-            <p class="text-sm text-gray-500">Check K20-K26 recordings - DRY RUN reports issues without clearing</p>
-          </div>
-          <div class="flex gap-2">
-            <%= button_to "Dry Run", admin_run_job_path(job: "verify_all_recordings", dry_run: true), method: :post,
-                class: "px-3 py-1 text-sm rounded bg-blue-100 text-blue-700 hover:bg-blue-200",
-                data: { turbo_confirm: "Dry run - verify all recording URLs across all events without clearing. This may take several minutes." } %>
-            <%= button_to "Clear Invalid", admin_run_job_path(job: "verify_all_recordings_clear"), method: :post,
-                class: "px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200",
-                data: { turbo_confirm: "⚠️ WARNING: This will CLEAR all invalid recording URLs. Run dry run first to see what will be removed. Continue?" } %>
-          </div>
-        </div>
-        
-        <%# Individual event verification buttons %>
-        <div class="py-2 border-t border-gray-100">
-          <div class="mb-2">
-            <span class="font-medium text-gray-900">Verify Recordings by Event</span>
-            <p class="text-sm text-gray-500">Check recording URLs - click event name to dry run</p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <%= button_to "K20", admin_run_job_path(job: "verify_k20_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-            <%= button_to "K21", admin_run_job_path(job: "verify_k21_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-            <%= button_to "K22", admin_run_job_path(job: "verify_k22_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-            <%= button_to "K23", admin_run_job_path(job: "verify_k23_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-            <%= button_to "K24", admin_run_job_path(job: "verify_k24_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-            <%= button_to "K25", admin_run_job_path(job: "verify_k25_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-            <%= button_to "K26", admin_run_job_path(job: "verify_k26_recordings", dry_run: true), method: :post,
-                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
-          </div>
-          <p class="text-xs text-gray-500 mt-1">To clear invalid URLs, run dry run first, then use "Clear Invalid" button above</p>
-        </div>
       </div>
     </div>
 
