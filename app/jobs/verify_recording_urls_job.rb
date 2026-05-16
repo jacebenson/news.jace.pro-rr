@@ -1,9 +1,22 @@
 class VerifyRecordingUrlsJob < ApplicationJob
   queue_as :default
 
-  # Policy key for accessing the Brightcove playback API
-  POLICY_KEY = "BCpkADawqM10puDCjU1kN2Q_uSH88Mt4Q3lnff2P52BxeoyUb-ArQcO-o7cWhORTaxyJXoyq4RH203fbAMmv5TkO_KrZJlPP2X42T2ofBRNH8wfZdvogEwb4nS_TbFjjw9YqZvls_o7730Rl".freeze
-  BRIGHTCOVE_API_BASE = "https://edge.api.brightcove.com/playback/v1/accounts/5703385908001/videos".freeze
+  # Policy keys for different Brightcove accounts
+  # Main ServiceNow account
+  POLICY_KEY_MAIN = "BCpkADawqM10puDCjU1kN2Q_uSH88Mt4Q3lnff2P52BxeoyUb-ArQcO-o7cWhORTaxyJXoyq4RH203fbAMmv5TkO_KrZJlPP2X42T2ofBRNH8wfZdvogEwb4nS_TbFjjw9YqZvls_o7730Rl".freeze
+  # TODO: Add policy key for account 5993042352001 if available
+  # POLICY_KEY_SECONDARY = "...".freeze
+
+  # URL patterns vary by year
+  REF_PATTERNS = {
+    "k20" => ->(code) { "ref:K20-#{code}" },
+    "k21" => ->(code) { "ref:#{code}-K21" },
+    "k22" => ->(code) { "ref:#{code}-SDR22" },
+    "k23" => ->(code) { "ref:#{code}-K23" },
+    "k24" => ->(code) { "ref:#{code}-K24" },
+    "k25" => ->(code) { "ref:#{code}-K25" },
+    "k26" => ->(code) { "ref:#{code}-K26" }
+  }.freeze
 
   def perform(event: nil)
     if event.present?
@@ -11,7 +24,7 @@ class VerifyRecordingUrlsJob < ApplicationJob
     else
       # Verify all events
       results = {}
-      %w[k20 k21 k22 k23 k24 k25 k26].each do |evt|
+      REF_PATTERNS.keys.each do |evt|
         results[evt] = verify_event(evt)
       end
       results
@@ -32,20 +45,28 @@ class VerifyRecordingUrlsJob < ApplicationJob
       return { event: event, checked: 0, valid: 0, cleared: 0, message: message }
     end
 
+    pattern_lambda = REF_PATTERNS[event]
+    if pattern_lambda.nil?
+      message = "Unknown event pattern for #{event.upcase}, skipping"
+      Rails.logger.warn "[VerifyRecordingUrlsJob] #{message}"
+      return { event: event, checked: 0, valid: 0, cleared: 0, message: message }
+    end
+
     valid = 0
     cleared = 0
 
     sessions.find_each.with_index do |session, idx|
-      # Extract year from event (k20 -> 20, k24 -> 24)
-      year = event.gsub(/\D/, "")
-      video_ref = "ref:#{session.code}-K#{year}"
+      video_ref = pattern_lambda.call(session.code)
 
-      if video_exists?(video_ref)
+      # Extract account ID from the existing URL (handles multiple accounts like K20)
+      account_id = extract_account_id(session.recording_url)
+
+      if video_exists?(video_ref, account_id)
         valid += 1
       else
         session.update!(recording_url: nil)
         cleared += 1
-        Rails.logger.info "[VerifyRecordingUrlsJob] Cleared invalid URL for #{session.code}"
+        Rails.logger.info "[VerifyRecordingUrlsJob] Cleared invalid URL for #{session.code} (tried: #{video_ref}, account: #{account_id})"
       end
 
       if (idx + 1) % 50 == 0
@@ -59,13 +80,38 @@ class VerifyRecordingUrlsJob < ApplicationJob
     { event: event, checked: total, valid: valid, cleared: cleared, message: message }
   end
 
-  def video_exists?(video_ref)
+  def extract_account_id(recording_url)
+    # Extract account ID from URL like:
+    # https://players.brightcove.net/5703385908001/zKNjJ2k2DM_default/...
+    # https://players.brightcove.net/5993042352001/ROIuYES7V_default/...
+    match = recording_url.match(%r{/net/(\d+)/})
+    match ? match[1] : "5703385908001" # Default to main account
+  end
+
+  def video_exists?(video_ref, account_id)
     require "net/http"
     require "uri"
     require "json"
 
+    # Use appropriate policy key for the account
+    policy_key = case account_id
+    when "5703385908001"
+      POLICY_KEY_MAIN
+    when "5993042352001"
+      # Skip verification if we don't have the policy key for this account
+      # Return true to preserve the URL (user can test manually)
+      Rails.logger.warn "[VerifyRecordingUrlsJob] Cannot verify #{video_ref} on account #{account_id} - no policy key available"
+      return true
+    else
+      # Unknown account - skip verification
+      Rails.logger.warn "[VerifyRecordingUrlsJob] Unknown account #{account_id} for #{video_ref}, skipping verification"
+      return true
+    end
+
+    brightcove_api_base = "https://edge.api.brightcove.com/playback/v1/accounts/#{account_id}/videos"
+
     encoded_ref = URI.encode_www_form_component(video_ref)
-    url = "#{BRIGHTCOVE_API_BASE}/#{encoded_ref}"
+    url = "#{brightcove_api_base}/#{encoded_ref}"
 
     uri = URI.parse(url)
     http = Net::HTTP.new(uri.host, uri.port)
@@ -74,7 +120,7 @@ class VerifyRecordingUrlsJob < ApplicationJob
     http.read_timeout = 10
 
     request = Net::HTTP::Get.new(uri.request_uri)
-    request["Accept"] = "application/json;pk=#{POLICY_KEY}"
+    request["Accept"] = "application/json;pk=#{policy_key}"
     request["Origin"] = "https://players.brightcove.net"
     request["Referer"] = "https://players.brightcove.net/"
 
@@ -91,7 +137,7 @@ class VerifyRecordingUrlsJob < ApplicationJob
       false
     end
   rescue => e
-    Rails.logger.debug "[VerifyRecordingUrlsJob] Error checking #{video_ref}: #{e.message}"
+    Rails.logger.debug "[VerifyRecordingUrlsJob] Error checking #{video_ref} on account #{account_id}: #{e.message}"
     false
   end
 end
