@@ -114,6 +114,41 @@
               class: "px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200",
               data: { turbo_confirm: "Fetch recording URLs for all K26 sessions?" } %>
         </div>
+        
+        <%# Verify recording URLs for all events %>
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div>
+            <span class="font-medium text-gray-900">Verify All Recording URLs</span>
+            <p class="text-sm text-gray-500">Check K20-K26 recordings and clear invalid URLs</p>
+          </div>
+          <%= button_to "Run Now", admin_run_job_path(job: "verify_all_recordings"), method: :post,
+              class: "px-3 py-1 text-sm rounded bg-blue-100 text-blue-700 hover:bg-blue-200",
+              data: { turbo_confirm: "Verify all recording URLs across all events? This may take several minutes." } %>
+        </div>
+        
+        <%# Individual event verification buttons %>
+        <div class="py-2 border-t border-gray-100">
+          <div class="mb-2">
+            <span class="font-medium text-gray-900">Verify Recordings by Event</span>
+            <p class="text-sm text-gray-500">Check and clear invalid recording URLs for specific event</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <%= button_to "K20", admin_run_job_path(job: "verify_k20_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+            <%= button_to "K21", admin_run_job_path(job: "verify_k21_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+            <%= button_to "K22", admin_run_job_path(job: "verify_k22_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+            <%= button_to "K23", admin_run_job_path(job: "verify_k23_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+            <%= button_to "K24", admin_run_job_path(job: "verify_k24_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+            <%= button_to "K25", admin_run_job_path(job: "verify_k25_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+            <%= button_to "K26", admin_run_job_path(job: "verify_k26_recordings"), method: :post,
+                class: "px-2 py-1 text-xs rounded bg-gray-100 text-gray-700 hover:bg-gray-200" %>
+          </div>
+        </div>
       </div>
     </div>
 
