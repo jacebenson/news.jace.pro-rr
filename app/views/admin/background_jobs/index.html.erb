@@ -93,17 +93,6 @@
             color: "indigo",
             next_run: @next_runs["FetchKnowledgeSessionsJob"] %>
         
-        <%# One-time K26 cleanup job %>
-        <div class="flex items-center justify-between py-2 border-t border-gray-100">
-          <div>
-            <span class="font-medium text-gray-900">Mark K26 Canceled Sessions</span>
-            <p class="text-sm text-gray-500">One-time: Mark sessions last seen before May 4 as canceled</p>
-          </div>
-          <%= button_to "Run Now", admin_run_job_path(job: "mark_k26_canceled"), method: :post,
-              class: "px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200",
-              data: { turbo_confirm: "Mark all K26 sessions last seen before May 4, 2026 as canceled?" } %>
-        </div>
-        
         <%# Fetch K26 recordings job %>
         <div class="flex items-center justify-between py-2 border-t border-gray-100">
           <div>
