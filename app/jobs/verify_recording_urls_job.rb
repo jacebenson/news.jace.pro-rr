@@ -4,8 +4,6 @@ class VerifyRecordingUrlsJob < ApplicationJob
   # Policy keys for different Brightcove accounts
   # Main ServiceNow account
   POLICY_KEY_MAIN = "BCpkADawqM10puDCjU1kN2Q_uSH88Mt4Q3lnff2P52BxeoyUb-ArQcO-o7cWhORTaxyJXoyq4RH203fbAMmv5TkO_KrZJlPP2X42T2ofBRNH8wfZdvogEwb4nS_TbFjjw9YqZvls_o7730Rl".freeze
-  # TODO: Add policy key for account 5993042352001 if available
-  # POLICY_KEY_SECONDARY = "...".freeze
 
   # URL patterns vary by year
   REF_PATTERNS = {
@@ -18,14 +16,14 @@ class VerifyRecordingUrlsJob < ApplicationJob
     "k26" => ->(code) { "ref:#{code}-K26" }
   }.freeze
 
-  def perform(event: nil)
+  def perform(event: nil, dry_run: true)
     if event.present?
-      verify_event(event)
+      verify_event(event, dry_run: dry_run)
     else
       # Verify all events
       results = {}
       REF_PATTERNS.keys.each do |evt|
-        results[evt] = verify_event(evt)
+        results[evt] = verify_event(evt, dry_run: dry_run)
       end
       results
     end
@@ -33,8 +31,8 @@ class VerifyRecordingUrlsJob < ApplicationJob
 
   private
 
-  def verify_event(event)
-    Rails.logger.info "[VerifyRecordingUrlsJob] Verifying recordings for #{event.upcase}..."
+  def verify_event(event, dry_run: true)
+    Rails.logger.info "[VerifyRecordingUrlsJob] #{dry_run ? "DRY RUN - Reporting" : "Clearing"} recordings for #{event.upcase}..."
 
     sessions = KnowledgeSession.for_event(event).where.not(recording_url: nil)
     total = sessions.count
@@ -42,18 +40,19 @@ class VerifyRecordingUrlsJob < ApplicationJob
     if total == 0
       message = "No recordings to verify for #{event.upcase}"
       Rails.logger.info "[VerifyRecordingUrlsJob] #{message}"
-      return { event: event, checked: 0, valid: 0, cleared: 0, message: message }
+      return { event: event, checked: 0, valid: 0, invalid: 0, cleared: 0, message: message, invalid_codes: [] }
     end
 
     pattern_lambda = REF_PATTERNS[event]
     if pattern_lambda.nil?
       message = "Unknown event pattern for #{event.upcase}, skipping"
       Rails.logger.warn "[VerifyRecordingUrlsJob] #{message}"
-      return { event: event, checked: 0, valid: 0, cleared: 0, message: message }
+      return { event: event, checked: 0, valid: 0, invalid: 0, cleared: 0, message: message, invalid_codes: [] }
     end
 
     valid = 0
-    cleared = 0
+    invalid = []
+    skipped = []
 
     sessions.find_each.with_index do |session, idx|
       video_ref = pattern_lambda.call(session.code)
@@ -61,23 +60,45 @@ class VerifyRecordingUrlsJob < ApplicationJob
       # Extract account ID from the existing URL (handles multiple accounts like K20)
       account_id = extract_account_id(session.recording_url)
 
+      # Skip verification for accounts without policy keys
+      if account_id != "5703385908001"
+        skipped << { code: session.code, account: account_id, reason: "No policy key for account #{account_id}" }
+        Rails.logger.info "[VerifyRecordingUrlsJob] Skipping #{session.code} on account #{account_id}"
+        next
+      end
+
       if video_exists?(video_ref, account_id)
         valid += 1
       else
-        session.update!(recording_url: nil)
-        cleared += 1
-        Rails.logger.info "[VerifyRecordingUrlsJob] Cleared invalid URL for #{session.code} (tried: #{video_ref}, account: #{account_id})"
+        invalid << session.code
+        unless dry_run
+          session.update!(recording_url: nil)
+          Rails.logger.info "[VerifyRecordingUrlsJob] Cleared invalid URL for #{session.code}"
+        end
       end
 
       if (idx + 1) % 50 == 0
-        Rails.logger.info "[VerifyRecordingUrlsJob] #{event.upcase}: #{idx + 1}/#{total} checked, #{valid} valid, #{cleared} cleared"
+        Rails.logger.info "[VerifyRecordingUrlsJob] #{event.upcase}: #{idx + 1}/#{total} checked, #{valid} valid, #{invalid.count} invalid"
       end
     end
 
-    message = "#{event.upcase}: Checked #{total}, #{valid} valid, #{cleared} invalid URLs cleared"
+    cleared_count = dry_run ? 0 : invalid.count
+    action = dry_run ? "Would clear" : "Cleared"
+
+    message = "#{event.upcase}: Checked #{total}, #{valid} valid, #{invalid.count} invalid (#{action} #{invalid.count}), #{skipped.count} skipped"
     Rails.logger.info "[VerifyRecordingUrlsJob] #{message}"
 
-    { event: event, checked: total, valid: valid, cleared: cleared, message: message }
+    {
+      event: event,
+      checked: total,
+      valid: valid,
+      invalid: invalid.count,
+      cleared: cleared_count,
+      skipped: skipped.count,
+      message: message,
+      invalid_codes: invalid,
+      skipped_details: skipped
+    }
   end
 
   def extract_account_id(recording_url)
@@ -97,15 +118,10 @@ class VerifyRecordingUrlsJob < ApplicationJob
     policy_key = case account_id
     when "5703385908001"
       POLICY_KEY_MAIN
-    when "5993042352001"
-      # Skip verification if we don't have the policy key for this account
-      # Return true to preserve the URL (user can test manually)
-      Rails.logger.warn "[VerifyRecordingUrlsJob] Cannot verify #{video_ref} on account #{account_id} - no policy key available"
-      return true
     else
-      # Unknown account - skip verification
-      Rails.logger.warn "[VerifyRecordingUrlsJob] Unknown account #{account_id} for #{video_ref}, skipping verification"
-      return true
+      # Skip verification if we don't have the policy key for this account
+      Rails.logger.warn "[VerifyRecordingUrlsJob] No policy key for account #{account_id}, skipping verification for #{video_ref}"
+      return true # Return true to preserve the URL
     end
 
     brightcove_api_base = "https://edge.api.brightcove.com/playback/v1/accounts/#{account_id}/videos"

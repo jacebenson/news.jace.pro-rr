@@ -83,30 +83,42 @@ module Admin
         result = FetchK26RecordingsJob.perform_now
         flash[:notice] = result[:message]
       when "verify_all_recordings"
-        result = VerifyRecordingUrlsJob.perform_now
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(dry_run: dry_run)
         messages = result.is_a?(Hash) && result.values.first.is_a?(Hash) ? result.values.map { |r| r[:message] }.join(" | ") : result[:message]
-        flash[:notice] = messages
+        flash[:notice] = dry_run ? "DRY RUN: #{messages}" : messages
+      when "verify_all_recordings_clear"
+        result = VerifyRecordingUrlsJob.perform_now(dry_run: false)
+        messages = result.is_a?(Hash) && result.values.first.is_a?(Hash) ? result.values.map { |r| r[:message] }.join(" | ") : result[:message]
+        flash[:notice] = "CLEARED: #{messages}"
       when "verify_k24_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k24")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k24", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       when "verify_k23_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k23")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k23", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       when "verify_k22_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k22")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k22", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       when "verify_k21_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k21")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k21", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       when "verify_k20_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k20")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k20", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       when "verify_k25_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k25")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k25", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       when "verify_k26_recordings"
-        result = VerifyRecordingUrlsJob.perform_now(event: "k26")
-        flash[:notice] = result[:message]
+        dry_run = params[:dry_run] != "false"
+        result = VerifyRecordingUrlsJob.perform_now(event: "k26", dry_run: dry_run)
+        flash[:notice] = dry_run ? "DRY RUN: #{result[:message]}" : "CLEARED: #{result[:message]}"
       else
         flash[:alert] = "Unknown job: #{job_name}"
       end
