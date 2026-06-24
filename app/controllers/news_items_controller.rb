@@ -7,6 +7,10 @@ class NewsItemsController < ApplicationController
     if params[:participant].present?
       participant = Participant.find_by_slug(params[:participant])
       if participant
+        if participant.hidden?
+          redirect_to items_path, alert: "Participant not found"
+          return
+        end
         @participant = participant
         items = items.joins(:news_item_participants)
                      .where(news_item_participants: { participant_id: participant.id })
