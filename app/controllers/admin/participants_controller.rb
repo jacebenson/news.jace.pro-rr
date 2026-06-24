@@ -168,7 +168,7 @@ module Admin
 
     def participant_params
       params.require(:participant).permit(:name, :title, :bio, :image_url, :linkedin_url,
-                                          :company_name, :company_id, :user_id)
+                                          :company_name, :company_id, :user_id, :hidden)
     end
 
     def redirect_path

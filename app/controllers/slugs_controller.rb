@@ -2,9 +2,12 @@ class SlugsController < ApplicationController
   def show
     slug = params[:slug]
 
-    # Try to find a participant with this slug
     participant = Participant.find_by_slug(slug)
     if participant
+      if participant.hidden?
+        redirect_to items_path, alert: "Page not found"
+        return
+      end
       redirect_to who_path(name: participant.slug)
       return
     end

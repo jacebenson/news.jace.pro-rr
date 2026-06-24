@@ -1,7 +1,7 @@
 class ParticipantsController < ApplicationController
   def index
     @show_nav_tabs = true
-    @participants = Participant.where.not(name: [ nil, "" ])
+    @participants = Participant.where.not(name: [ nil, "" ]).where(hidden: false)
 
     if params[:search].present?
       @search = params[:search]
@@ -19,6 +19,12 @@ class ParticipantsController < ApplicationController
     @participant = Participant.find_by_slug(params[:name])
 
     unless @participant
+      redirect_to items_path, alert: "Participant not found"
+      return
+    end
+
+    # NEW — return 404 if hidden
+    if @participant.hidden?
       redirect_to items_path, alert: "Participant not found"
       return
     end
