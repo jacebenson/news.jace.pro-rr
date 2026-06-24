@@ -4,7 +4,7 @@ class SlugsController < ApplicationController
 
     participant = Participant.find_by_slug(slug)
     if participant
-      if participant.hidden?
+      if participant.hidden? && !admin?
         redirect_to items_path, alert: "Page not found"
         return
       end

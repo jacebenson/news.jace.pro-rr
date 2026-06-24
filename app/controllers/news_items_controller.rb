@@ -7,7 +7,7 @@ class NewsItemsController < ApplicationController
     if params[:participant].present?
       participant = Participant.find_by_slug(params[:participant])
       if participant
-        if participant.hidden?
+        if participant.hidden? && !admin?
           redirect_to items_path, alert: "Participant not found"
           return
         end

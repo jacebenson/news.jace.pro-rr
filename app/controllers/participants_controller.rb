@@ -24,7 +24,7 @@ class ParticipantsController < ApplicationController
     end
 
     # NEW — return 404 if hidden
-    if @participant.hidden?
+    if @participant.hidden? && !admin?
       redirect_to items_path, alert: "Participant not found"
       return
     end
